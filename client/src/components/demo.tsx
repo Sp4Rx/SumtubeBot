@@ -6,9 +6,9 @@ export default function Demo() {
       <div className="container mx-auto px-6">
         <div className="glass-card rounded-2xl p-8 shadow-xl">
           <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">See SumTube in Action</h2>
-          
+
           {/* Demo Chat Interface */}
-          <div className="bg-gray-800 rounded-xl p-6 max-w-4xl mx-auto">
+          <div className="bg-gray-800 rounded-xl p-6 max-w-5xl mx-auto">
             {/* Chat Header */}
             <div className="flex items-center mb-4 pb-4 border-b border-gray-700">
               <div className="w-8 h-8 bg-discord rounded-full flex items-center justify-center mr-3">
@@ -16,7 +16,7 @@ export default function Demo() {
               </div>
               <span className="text-white font-semibold">general</span>
             </div>
-            
+
             {/* Demo Messages */}
             <div className="space-y-4">
               {/* User Message */}
@@ -26,49 +26,77 @@ export default function Demo() {
                 </div>
                 <div>
                   <div className="flex items-center space-x-2 mb-1">
-                    <span className="text-green-400 font-semibold">User</span>
-                    <span className="text-gray-500 text-sm">Today at 2:30 PM</span>
+                    <span className="text-green-400 font-semibold">Developer</span>
+                    <span className="text-gray-500 text-sm">Today at 08:05 PM</span>
                   </div>
-                  <p className="text-gray-300">Check out this cool tutorial: https://youtu.be/dQw4w9WgXcQ</p>
+                  <p className="text-gray-300">Check out this hackathon tutorial: https://youtu.be/hackathon-submission-guide</p>
                 </div>
               </div>
-              
+
               {/* Bot Response */}
               <div className="flex items-start space-x-3">
-                <img src={logoPath} 
-                     alt="SumTube Bot Avatar" 
-                     className="w-10 h-10 rounded-full" />
+                <img src={logoPath}
+                  alt="SumTube Bot Avatar"
+                  className="w-10 h-10 rounded-full" />
                 <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-2">
                     <span className="text-discord font-semibold">SumTube</span>
                     <span className="bg-discord text-white text-xs px-2 py-1 rounded">BOT</span>
-                    <span className="text-gray-500 text-sm">Today at 2:30 PM</span>
+                    <span className="text-gray-500 text-sm">Today at 08:05 PM</span>
                   </div>
-                  
+
                   {/* Summary Card */}
-                  <div className="bg-gray-700 rounded-lg p-4 border-l-4 border-youtube">
-                    <div className="flex items-center space-x-2 mb-3">
+                  <div className="bg-gray-700 rounded-lg p-6 border-l-4 border-youtube">
+                    <div className="flex items-center space-x-2 mb-4">
                       <i className="fab fa-youtube text-youtube text-lg"></i>
-                      <span className="text-white font-semibold">Video Summary</span>
+                      <span className="text-white font-semibold">📺 How To Submit Your Hackathon Build</span>
                     </div>
-                    
-                    <h4 className="text-white font-medium mb-2">Never Gonna Give You Up - Rick Astley</h4>
-                    <p className="text-gray-300 text-sm mb-3">
-                      🎵 Classic 80s pop music video featuring Rick Astley's iconic dance moves and memorable chorus. The song became an internet phenomenon and cultural meme.
+
+                    <p className="text-gray-300 text-sm mb-4 leading-relaxed">
+                      Submitting your project to the World's Largest Hackathon on Devpost involves a series of steps to ensure all necessary information is provided for judging and display. The deadline is June 30, 2025, at 5 PM ET.
                     </p>
-                    
-                    <div className="text-gray-400 text-sm space-y-1">
-                      <div><strong>Duration:</strong> 3:33</div>
-                      <div><strong>Key Moments:</strong></div>
-                      <div className="ml-4">
-                        • <span className="text-youtube">0:07</span> - Iconic opening dance sequence<br />
-                        • <span className="text-youtube">0:43</span> - Main chorus begins<br />
-                        • <span className="text-youtube">2:15</span> - Bridge section with background vocals
+
+                    <div className="text-gray-400 text-sm space-y-2">
+                      <div><strong className="text-white">Key Timestamps:</strong></div>
+                      <div className="space-y-1 ml-4">
+                        <div>• <span className="text-youtube font-mono">0:18</span> - Access the hackathon homepage (worldslargesthackathon.devpost.com) and either Edit project or Create project.</div>
+                        <div>• <span className="text-youtube font-mono">0:35</span> - Manage Team: Add teammates via email invite or sharing a secret link.</div>
+                        <div>• <span className="text-youtube font-mono">0:43</span> - Project Overview (General Info): Enter Project Name, Elevator Pitch (short tagline), and upload a Thumbnail (JPG, PNG, GIF, 5MB max, 3.2 ratio).</div>
+                        <div>• <span className="text-youtube font-mono">0:57</span> - Project Details (Public): Write your Project Story using Markdown (including inspiration, what it does, how it was built, challenges, accomplishments, future plans, and sponsor challenge compliance).</div>
+                        <div>• <span className="text-youtube font-mono">1:45</span> - Built With: Tag languages, frameworks, platforms (e.g., bolt.new, Gemini, Netlify).</div>
+                        <div>• <span className="text-youtube font-mono">1:49</span> - Try it Out Links: Provide public links like demo site, app store listing, or GitHub repo.</div>
+                        <div>• <span className="text-youtube font-mono">1:57</span> - Project Media: Upload images and include a Video Demo Link (YouTube, Facebook, Vimeo, or Youku URL; approx. 3 minutes, public).</div>
+                        <div>• <span className="text-youtube font-mono">2:13</span> - Additional Info (Judges/Organizers only): Provide project URL, confirm badge display, provide Bolt.new URL, state project start date.</div>
+                        <div>• <span className="text-youtube font-mono">3:14</span> - Challenges: Select sponsor challenges and provide relevant IDs/information.</div>
+                        <div>• <span className="text-youtube font-mono">3:32</span> - Bonus Prizes: Indicate if submitting for specific bonus prizes like "One-Shot Competition".</div>
+                        <div>• <span className="text-youtube font-mono">3:50</span> - Submitter Type, Region, Country: Select Individual, Team, or Organization.</div>
+                        <div>• <span className="text-youtube font-mono">4:08</span> - Feedback: Rate experience building with Bolt (0-10) and offer suggestions.</div>
+                        <div>• <span className="text-youtube font-mono">4:13</span> - Submit Project: Agree to Official Rules and Devpost Terms of Service.</div>
+                        <div>• <span className="text-youtube font-mono">4:16</span> - Verify your project page on Devpost, ensuring video is playable and formatting is correct.</div>
                       </div>
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t border-gray-600 text-xs text-gray-500">
+                      <i className="fas fa-robot mr-1"></i>
+                      AI-Powered Video Summary • SumTube • AI-Powered Video Summaries
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Additional Info */}
+          <div className="mt-8 text-center">
+            <p className="text-gray-600 mb-4">
+              <i className="fas fa-magic mr-2"></i>
+              Powered by Google Gemini AI for intelligent video analysis
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">Automatic Detection</span>
+              <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">Timestamp Extraction</span>
+              <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">Context-Aware Summaries</span>
+              <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm">Multi-Server Support</span>
             </div>
           </div>
         </div>
