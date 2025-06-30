@@ -17,7 +17,7 @@ export default function Footer() {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-            <a href="https://discord.com/oauth2/authorize?client_id=YOUR_BOT_ID&permissions=2147551232&scope=bot%20applications.commands" 
+            <a href={`https://discord.com/oauth2/authorize?client_id=${process.env.DISCORD_APPLICATION_ID}&permissions=2147551232&scope=bot%20applications.commands`} 
                target="_blank"
                className="bg-discord hover:bg-discord-dark text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 inline-flex items-center space-x-2">
               <i className="fab fa-discord"></i>

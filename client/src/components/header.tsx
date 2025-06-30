@@ -23,7 +23,7 @@ export default function Header() {
         
         {/* Main CTA */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <a href="https://discord.com/oauth2/authorize?client_id=YOUR_BOT_ID&permissions=2147551232&scope=bot%20applications.commands" 
+          <a href={`https://discord.com/oauth2/authorize?client_id=${process.env.DISCORD_APPLICATION_ID}&permissions=2147551232&scope=bot%20applications.commands`} 
              target="_blank"
              className="bg-discord hover:bg-discord-dark text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 inline-flex items-center space-x-3 animate-pulse-glow">
             <i className="fab fa-discord text-2xl"></i>
