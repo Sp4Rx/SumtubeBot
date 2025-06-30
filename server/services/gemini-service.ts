@@ -8,10 +8,7 @@ export const model = 'gemini-2.5-flash';
 
 export interface VideoSummaryData {
   summary: string;
-  keyPoints: string[];
-  timestamps: string[];
   title: string;
-  duration: number;
 }
 
 export async function generateVideoSummary(videoUrl: string, videoId: string): Promise<VideoSummaryData> {
@@ -71,30 +68,22 @@ export async function generateVideoSummary(videoUrl: string, videoId: string): P
       console.log(`📄 Summary generated successfully (${summaryText.length} characters)`);
       console.log(`📊 Summary preview: ${summaryText.substring(0, 100)}...`);
 
-      // Parse the summary to extract key points and timestamps
-      const lines = summaryText.trim().split('\n').filter(line => line.trim());
-      const summary = lines[0] || summaryText.slice(0, 200);
-      const keyPoints: string[] = [];
-      const timestamps: string[] = [];
-
-      // Extract lines that contain timestamps
-      lines.forEach(line => {
-        if (line.includes('[') && line.includes(']')) {
-          keyPoints.push(line.trim());
-          timestamps.push(line.trim());
+      // Try to get video title from YouTube meta tags
+      let title = `YouTube Video ${videoId}`;
+      try {
+        const titleResponse = await fetch(`https://www.youtube.com/watch?v=${videoId}`);
+        const html = await titleResponse.text();
+        const titleMatch = html.match(/<title>([^<]+)<\/title>/);
+        if (titleMatch && titleMatch[1]) {
+          title = titleMatch[1].replace(' - YouTube', '').trim();
         }
-      });
-
-      // Use default values instead of extraction functions
-      const title = `YouTube Video ${videoId}`;
-      const duration = 0; // Default duration
+      } catch (error) {
+        console.log('⚠️ Could not fetch video title from meta tags, using default');
+      }
 
       return {
-        summary: summary.trim(),
-        keyPoints: keyPoints.length > 0 ? keyPoints : [summaryText.slice(0, 100) + '...'],
-        timestamps: timestamps.length > 0 ? timestamps : [],
+        summary: summaryText.trim(),
         title: title,
-        duration: duration,
       };
     } else {
       console.error('❌ Gemini API returned empty or null summary');
@@ -134,13 +123,4 @@ export function extractVideoId(url: string): string | null {
   return match ? match[1] : null;
 }
 
-function formatDuration(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
 
-  if (hours > 0) {
-    return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  }
-  return `${minutes}:${secs.toString().padStart(2, '0')}`;
-}

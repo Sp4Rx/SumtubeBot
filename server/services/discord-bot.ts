@@ -1,5 +1,5 @@
 import { Client, GatewayIntentBits, Message } from 'discord.js';
-import { generateVideoSummary, extractVideoId } from './gemini-service';
+import { generateVideoSummary, extractVideoId, VideoSummaryData } from './gemini-service';
 
 const client = new Client({
   intents: [
@@ -44,48 +44,27 @@ client.on('messageCreate', async (message: Message) => {
       // Generate AI summary directly from URL
       const summaryData = await generateVideoSummary(youtubeUrl, videoId);
 
-      // Send summary message directly without storing
+      // Send summary message using formatting method
       await sendSummaryMessage(message, summaryData);
     }
   } catch (error) {
     console.error('Error processing YouTube link:', error);
     await message.reply({
-      content: '❌ An error occurred while processing the video. Please try again later.',
+      content: `❌ An error occurred while processing the video. Please try again later. \n\`\`\`${error}\`\`\``,
     });
   }
 });
 
-async function sendSummaryMessage(message: Message, summaryData: any) {
+async function sendSummaryMessage(message: Message, summaryData: VideoSummaryData) {
   const embed = {
     color: 0xFF0000, // YouTube red
     title: `📺 ${summaryData.title}`,
     description: summaryData.summary,
-    fields: [
-      {
-        name: '⏱️ Duration',
-        value: formatDuration(summaryData.duration),
-        inline: true,
-      },
-      {
-        name: '🔍 Key Points',
-        value: summaryData.keyPoints.slice(0, 3).map((point: string, index: number) => `${index + 1}. ${point}`).join('\n') || 'No key points available',
-        inline: false,
-      },
-    ],
     footer: {
       text: 'SumTube • AI-Powered Video Summaries',
-      icon_url: 'https://i.imgur.com/SumTubeLogo.png',
     },
     timestamp: new Date().toISOString(),
   };
-
-  if (summaryData.timestamps && summaryData.timestamps.length > 0) {
-    embed.fields.push({
-      name: '🕒 Key Moments',
-      value: summaryData.timestamps.slice(0, 3).join('\n') || 'No timestamps available',
-      inline: false,
-    });
-  }
 
   await message.reply({ embeds: [embed] });
 }
