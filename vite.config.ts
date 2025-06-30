@@ -16,6 +16,9 @@ export default defineConfig({
       ]
       : []),
   ],
+  define: {
+    'import.meta.env.VITE_DISCORD_APPLICATION_ID': JSON.stringify(process.env.DISCORD_APPLICATION_ID),
+  },
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),
