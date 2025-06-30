@@ -1,7 +1,6 @@
-import { GoogleGenAI } from "@google/genai";
-import type { TranscriptData } from "./youtube-transcript";
+import { GoogleGenAI, Content, Part } from "@google/genai";
 
-const ai = new GoogleGenAI({ 
+const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY || ""
 });
 
@@ -11,11 +10,13 @@ export interface VideoSummaryData {
   summary: string;
   keyPoints: string[];
   timestamps: string[];
+  title: string;
+  duration: number;
 }
 
-export async function generateVideoSummary(transcriptData: TranscriptData): Promise<VideoSummaryData> {
+export async function generateVideoSummary(videoUrl: string, videoId: string): Promise<VideoSummaryData> {
   try {
-    console.log(`🎬 Starting Gemini analysis for video: ${transcriptData.title} (ID: ${transcriptData.videoId})`);
+    console.log(`🎬 Starting Gemini analysis for video: ${videoUrl} (ID: ${videoId})`);
 
     if (!process.env.GEMINI_API_KEY) {
       console.error('❌ GEMINI_API_KEY not found in environment variables');
@@ -24,25 +25,31 @@ export async function generateVideoSummary(transcriptData: TranscriptData): Prom
 
     // Create a detailed prompt for better YouTube video summaries
     const prompt = `
-        Analyze the following YouTube video and generate a concise summary formatted for a Discord message under 1700 characters.
-        - Start with a short summary summarizing the overall theme or purpose of the video.
-        - Each point must begin with a timestamp in [m:ss] format (e.g., [1:15]).
-        - Format the timestamp [m:ss] as a clickable hyperlink like: https://www.youtube.com/watch?v=${transcriptData.videoId}#t=SECONDS.
-        - Use total SECONDS for the timestamp (e.g., 75 instead of 01:15).
-        - Do not include any other text than the summary. minimalistic.
-        - If there is any important information that is not covered in the transcript, add it to the summary, like code, links, images, problems, solutions, etc.
-
-Video Title: ${transcriptData.title}
-Duration: ${formatDuration(transcriptData.duration)}
-
-Transcript:
-${transcriptData.transcript.slice(0, 4000)} ${transcriptData.transcript.length > 4000 ? '...' : ''}
-
-Focus on the main content, ignore filler words, and provide actionable insights where applicable.
-        `;
+    Analyze the following YouTube video and generate a concise summary formatted for a Discord message under 1700 characters.
+    - Start with a short summary summarizing the overall theme or purpose of the video.
+    - Each point must begin with a timestamp in [m:ss] format (e.g., [1:15]).
+    - Format the timestamp [m:ss] as a clickable hyperlink like: https://www.youtube.com/watch?v=${videoId}#t=SECONDS.
+    - Use total SECONDS for the timestamp (e.g., 75 instead of 01:15).
+    - Do not include any other text than the summary. minimalistic.
+    - Add important information like code, links, images, problems, solutions, etc. also.
+    `;
 
     console.log('📝 Created prompt for video analysis');
     console.log(`📋 Using model: ${model}`);
+
+    // Create content with both text prompt and YouTube URL
+    const contents: Content = {
+      parts: [
+        {
+          text: prompt
+        } as Part,
+        {
+          fileData: {
+            fileUri: videoUrl
+          }
+        } as Part
+      ]
+    };
 
     console.log('🚀 Sending request to Gemini API...');
     const startTime = Date.now();
@@ -50,7 +57,7 @@ Focus on the main content, ignore filler words, and provide actionable insights 
     // Generate content using Gemini 2.5 Flash
     const response = await ai.models.generateContent({
       model: model,
-      contents: prompt,
+      contents: contents,
     });
 
     const endTime = Date.now();
@@ -63,13 +70,13 @@ Focus on the main content, ignore filler words, and provide actionable insights 
     if (summaryText && summaryText.trim()) {
       console.log(`📄 Summary generated successfully (${summaryText.length} characters)`);
       console.log(`📊 Summary preview: ${summaryText.substring(0, 100)}...`);
-      
+
       // Parse the summary to extract key points and timestamps
       const lines = summaryText.trim().split('\n').filter(line => line.trim());
       const summary = lines[0] || summaryText.slice(0, 200);
       const keyPoints: string[] = [];
       const timestamps: string[] = [];
-      
+
       // Extract lines that contain timestamps
       lines.forEach(line => {
         if (line.includes('[') && line.includes(']')) {
@@ -77,11 +84,17 @@ Focus on the main content, ignore filler words, and provide actionable insights 
           timestamps.push(line.trim());
         }
       });
-      
+
+      // Use default values instead of extraction functions
+      const title = `YouTube Video ${videoId}`;
+      const duration = 0; // Default duration
+
       return {
         summary: summary.trim(),
         keyPoints: keyPoints.length > 0 ? keyPoints : [summaryText.slice(0, 100) + '...'],
         timestamps: timestamps.length > 0 ? timestamps : [],
+        title: title,
+        duration: duration,
       };
     } else {
       console.error('❌ Gemini API returned empty or null summary');
@@ -115,19 +128,10 @@ Focus on the main content, ignore filler words, and provide actionable insights 
   }
 }
 
-function generateTimestamps(duration: number, keyPoints: string[]): string[] {
-  if (keyPoints.length === 0) return [];
-  
-  const timestamps: string[] = [];
-  const interval = Math.floor(duration / (keyPoints.length + 1));
-  
-  keyPoints.forEach((point, index) => {
-    const timeInSeconds = interval * (index + 1);
-    const timeFormatted = formatDuration(timeInSeconds);
-    timestamps.push(`• ${timeFormatted} - ${point.slice(0, 60)}${point.length > 60 ? '...' : ''}`);
-  });
-  
-  return timestamps;
+export function extractVideoId(url: string): string | null {
+  const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+  const match = url.match(regex);
+  return match ? match[1] : null;
 }
 
 function formatDuration(seconds: number): string {

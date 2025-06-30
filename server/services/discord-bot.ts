@@ -1,7 +1,5 @@
 import { Client, GatewayIntentBits, Message } from 'discord.js';
-import { extractVideoId, getVideoTranscript } from './youtube-transcript';
-import { generateVideoSummary } from './gemini-service';
-import { storage } from '../storage';
+import { generateVideoSummary, extractVideoId } from './gemini-service';
 
 const client = new Client({
   intents: [
@@ -12,42 +10,14 @@ const client = new Client({
 });
 
 const YOUTUBE_URL_REGEX = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/g;
-const RATE_LIMIT_PER_HOUR = 10;
 
-async function checkRateLimit(serverId: string): Promise<boolean> {
-  const server = await storage.getDiscordServer(serverId);
-  
-  if (!server) {
-    // Create new server entry
-    await storage.createDiscordServer({
-      serverId,
-      serverName: 'Unknown Server',
-      isActive: true,
-      rateLimitCount: 0,
-    });
-    return true;
+export async function startDiscordBot(): Promise<void> {
+  if (!process.env.DISCORD_BOT_TOKEN) {
+    throw new Error('DISCORD_BOT_TOKEN not configured');
   }
 
-  // Reset rate limit if an hour has passed
-  const hourAgo = new Date(Date.now() - 60 * 60 * 1000);
-  if (server.lastResetTime < hourAgo) {
-    await storage.resetServerRateLimit(serverId);
-    return true;
-  }
-
-  return server.rateLimitCount < RATE_LIMIT_PER_HOUR;
+  await client.login(process.env.DISCORD_BOT_TOKEN);
 }
-
-async function incrementRateLimit(serverId: string): Promise<void> {
-  const server = await storage.getDiscordServer(serverId);
-  if (server) {
-    await storage.updateServerRateLimit(serverId, server.rateLimitCount + 1);
-  }
-}
-
-client.on('ready', () => {
-  console.log(`🤖 SumTube bot is online as ${client.user?.tag}`);
-});
 
 client.on('messageCreate', async (message: Message) => {
   // Ignore bot messages
@@ -57,29 +27,10 @@ client.on('messageCreate', async (message: Message) => {
   const youtubeMatches = message.content.match(YOUTUBE_URL_REGEX);
   if (!youtubeMatches) return;
 
-  const serverId = message.guild?.id;
-  if (!serverId) return;
-
-  // Check rate limit
-  const canProcess = await checkRateLimit(serverId);
-  if (!canProcess) {
-    await message.reply({
-      content: '⚠️ Rate limit exceeded! This server has reached the maximum of 10 summaries per hour. Please try again later.',
-    });
-    return;
-  }
-
   try {
     for (const youtubeUrl of youtubeMatches) {
       const videoId = extractVideoId(youtubeUrl);
       if (!videoId) continue;
-
-      // Check if we already have a summary for this video
-      const existingSummary = await storage.getVideoSummary(videoId);
-      if (existingSummary) {
-        await sendSummaryMessage(message, existingSummary);
-        continue;
-      }
 
       // Show typing indicator (skip for certain channel types)
       if (message.channel.type === 0 || message.channel.type === 2 || message.channel.type === 5) { // GUILD_TEXT, DM, GUILD_ANNOUNCEMENT
@@ -90,31 +41,11 @@ client.on('messageCreate', async (message: Message) => {
         }
       }
 
-      // Get video transcript
-      const transcriptData = await getVideoTranscript(videoId);
-      if (!transcriptData) {
-        await message.reply({
-          content: '❌ Unable to get transcript for this video. The video might not have captions available or could be private.',
-        });
-        continue;
-      }
+      // Generate AI summary directly from URL
+      const summaryData = await generateVideoSummary(youtubeUrl, videoId);
 
-      // Generate AI summary
-      const summaryData = await generateVideoSummary(transcriptData);
-      
-      // Store summary
-      const videoSummary = await storage.createVideoSummary({
-        videoId,
-        videoTitle: transcriptData.title,
-        videoUrl: youtubeUrl,
-        summary: summaryData.summary,
-        keyPoints: summaryData.keyPoints,
-        timestamps: summaryData.timestamps,
-        duration: transcriptData.duration,
-      });
-
-      await sendSummaryMessage(message, videoSummary);
-      await incrementRateLimit(serverId);
+      // Send summary message directly without storing
+      await sendSummaryMessage(message, summaryData);
     }
   } catch (error) {
     console.error('Error processing YouTube link:', error);
@@ -124,20 +55,20 @@ client.on('messageCreate', async (message: Message) => {
   }
 });
 
-async function sendSummaryMessage(message: Message, summary: any) {
+async function sendSummaryMessage(message: Message, summaryData: any) {
   const embed = {
     color: 0xFF0000, // YouTube red
-    title: `📺 ${summary.videoTitle}`,
-    description: summary.summary,
+    title: `📺 ${summaryData.title}`,
+    description: summaryData.summary,
     fields: [
       {
         name: '⏱️ Duration',
-        value: formatDuration(summary.duration),
+        value: formatDuration(summaryData.duration),
         inline: true,
       },
       {
         name: '🔍 Key Points',
-        value: summary.keyPoints.slice(0, 3).map((point: string, index: number) => `${index + 1}. ${point}`).join('\n') || 'No key points available',
+        value: summaryData.keyPoints.slice(0, 3).map((point: string, index: number) => `${index + 1}. ${point}`).join('\n') || 'No key points available',
         inline: false,
       },
     ],
@@ -148,10 +79,10 @@ async function sendSummaryMessage(message: Message, summary: any) {
     timestamp: new Date().toISOString(),
   };
 
-  if (summary.timestamps && summary.timestamps.length > 0) {
+  if (summaryData.timestamps && summaryData.timestamps.length > 0) {
     embed.fields.push({
       name: '🕒 Key Moments',
-      value: summary.timestamps.slice(0, 3).join('\n') || 'No timestamps available',
+      value: summaryData.timestamps.slice(0, 3).join('\n') || 'No timestamps available',
       inline: false,
     });
   }
@@ -170,14 +101,22 @@ function formatDuration(seconds: number): string {
   return `${minutes}:${secs.toString().padStart(2, '0')}`;
 }
 
-export async function startDiscordBot(): Promise<void> {
-  const token = process.env.DISCORD_BOT_TOKEN || process.env.DISCORD_TOKEN;
-  
-  if (!token) {
-    throw new Error('DISCORD_BOT_TOKEN environment variable is required');
-  }
+client.on('ready', () => {
+  console.log(`✅ Discord bot logged in as ${client.user?.tag}!`);
+});
 
-  await client.login(token);
-}
+client.on('error', (error) => {
+  console.error('Discord client error:', error);
+});
 
-export { client as discordClient };
+process.on('SIGINT', () => {
+  console.log('🛑 Gracefully shutting down Discord bot...');
+  client.destroy();
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  console.log('🛑 Gracefully shutting down Discord bot...');
+  client.destroy();
+  process.exit(0);
+});
