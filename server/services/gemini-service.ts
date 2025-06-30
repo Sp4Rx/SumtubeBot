@@ -25,8 +25,7 @@ export async function generateVideoSummary(videoUrl: string, videoId: string): P
     Analyze the following YouTube video and generate a concise summary formatted for a Discord message under 1700 characters.
     - Start with a short summary summarizing the overall theme or purpose of the video.
     - Each point must begin with a timestamp in [m:ss] format (e.g., [1:15]).
-    - Format the timestamp [m:ss] as a clickable hyperlink like: https://www.youtube.com/watch?v=${videoId}#t=SECONDS.
-    - Use total SECONDS for the timestamp (e.g., 75 instead of 01:15).
+    - Format the timestamp [m:ss] as a clickable hyperlink like: https://www.youtube.com/watch?v=${videoId}#t=[SECONDS]. Where [SECONDS] is the total seconds for the timestamp (e.g., 75 instead of 01:15)
     - Do not include any other text than the summary. minimalistic.
     - Add important information like code, links, images, problems, solutions, etc. also.
     `;
