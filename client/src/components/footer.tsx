@@ -4,15 +4,15 @@ export default function Footer() {
   return (
     <footer className="relative z-10 py-12 mt-16">
       <div className="container mx-auto px-6">
-        <div className="glass-card rounded-2xl p-8 shadow-xl text-center">
+        <div className="glass-card rounded-2xl p-8 shadow-xl text-center border border-white/20">
           <div className="flex justify-center mb-6">
             <img src={logoPath}
               alt="SumTube Logo"
               className="w-16 h-16" />
           </div>
 
-          <h3 className="text-2xl font-bold text-gray-800 mb-4">Ready to enhance your Discord experience?</h3>
-          <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+          <h3 className="text-2xl font-bold text-white mb-4">Ready to enhance your Discord experience?</h3>
+          <p className="text-white/80 mb-6 max-w-2xl mx-auto">
             Join thousands of Discord servers already using SumTube to stay informed and save time with AI-powered video summaries.
           </p>
 
@@ -38,12 +38,10 @@ export default function Footer() {
             </a>
           </div>
 
-          <div className="border-t border-gray-200 pt-6">
-            <p className="text-gray-500 text-sm">
-              Made with ❤️ for the Discord community •
-              <a href="mailto:support@sumtube-bot.com" className="text-discord hover:underline">Support</a> •
-              <a href="#" className="text-discord hover:underline">Privacy Policy</a> •
-              <a href="#" className="text-discord hover:underline">Terms of Service</a>
+          <div className="border-t border-white/20 pt-6">
+            <p className="text-white/60 text-sm">
+              Made with ❤️ for <a href="https://suvajit.in" target="_blank" className="text-white hover:text-purple-300 hover:underline">suvajit.in</a> •
+              <a href="https://github.com/sp4rx/sumtubebot/blob/main/LICENSE" target="_blank" className="text-white hover:text-purple-300 hover:underline ml-1">License</a>
             </p>
           </div>
         </div>
