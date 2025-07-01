@@ -11,6 +11,13 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       colors: {
+        // Custom brand colors
+        discord: {
+          DEFAULT: "#5865f2",
+          dark: "#4752c4",
+        },
+        youtube: "#ff0000",
+
         background: "var(--background)",
         foreground: "var(--foreground)",
         card: {

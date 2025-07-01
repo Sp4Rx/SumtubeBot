@@ -4,8 +4,8 @@ export default function Demo() {
   return (
     <section className="relative z-10 py-16">
       <div className="container mx-auto px-6">
-        <div className="glass-card rounded-2xl p-8 shadow-xl">
-          <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">See SumTube in Action</h2>
+        <div className="glass-card rounded-2xl p-8 shadow-xl border border-white/20">
+          <h2 className="text-3xl font-bold text-white mb-8 text-center">See SumTube in Action</h2>
 
           {/* Demo Chat Interface */}
           <div className="bg-gray-800 rounded-xl p-6 max-w-5xl mx-auto">
@@ -88,15 +88,15 @@ export default function Demo() {
 
           {/* Additional Info */}
           <div className="mt-8 text-center">
-            <p className="text-gray-600 mb-4">
+            <p className="text-white/80 mb-4">
               <i className="fas fa-magic mr-2"></i>
               Powered by Google Gemini AI for intelligent video analysis
             </p>
             <div className="flex flex-wrap justify-center gap-2">
-              <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">Automatic Detection</span>
-              <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">Timestamp Extraction</span>
-              <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">Context-Aware Summaries</span>
-              <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm">Multi-Server Support</span>
+              <span className="bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full text-sm border border-blue-400/30">Automatic Detection</span>
+              <span className="bg-green-500/20 text-green-300 px-3 py-1 rounded-full text-sm border border-green-400/30">Timestamp Extraction</span>
+              <span className="bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full text-sm border border-purple-400/30">Context-Aware Summaries</span>
+              <span className="bg-orange-500/20 text-orange-300 px-3 py-1 rounded-full text-sm border border-orange-400/30">Multi-Server Support</span>
             </div>
           </div>
         </div>

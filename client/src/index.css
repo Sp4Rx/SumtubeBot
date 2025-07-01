@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -23,7 +24,7 @@
   --destructive-foreground: hsl(60, 9.1%, 97.8%);
   --ring: hsl(20, 14.3%, 4.1%);
   --radius: 0.5rem;
-  
+
   /* Custom colors for the bot */
   --discord: hsl(235, 85%, 65%);
   --discord-dark: hsl(235, 85%, 55%);
@@ -66,32 +67,44 @@
 
 /* Custom animations and styles */
 @keyframes float {
-  0%, 100% { 
-    transform: translateY(0px) rotate(0deg); 
-    opacity: 0.7; 
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+    opacity: 0.7;
   }
-  33% { 
-    transform: translateY(-20px) rotate(120deg); 
-    opacity: 0.4; 
+  33% {
+    transform: translateY(-20px) rotate(120deg);
+    opacity: 0.4;
   }
-  66% { 
-    transform: translateY(10px) rotate(240deg); 
-    opacity: 0.8; 
+  66% {
+    transform: translateY(10px) rotate(240deg);
+    opacity: 0.8;
   }
 }
 
 @keyframes gradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { 
-    box-shadow: 0 8px 25px rgba(88, 101, 242, 0.4), 0 0 20px rgba(88, 101, 242, 0.3); 
+  0%,
+  100% {
+    box-shadow:
+      0 8px 25px rgba(88, 101, 242, 0.4),
+      0 0 20px rgba(88, 101, 242, 0.3);
   }
-  50% { 
-    box-shadow: 0 12px 35px rgba(88, 101, 242, 0.5), 0 0 30px rgba(88, 101, 242, 0.4); 
+  50% {
+    box-shadow:
+      0 12px 35px rgba(88, 101, 242, 0.5),
+      0 0 30px rgba(88, 101, 242, 0.4);
   }
 }
 
@@ -113,7 +126,7 @@
   border-radius: 8px;
   padding: 1.5rem;
   overflow-x: auto;
-  font-family: 'JetBrains Mono', 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-family: "JetBrains Mono", "Consolas", "Monaco", "Courier New", monospace;
   font-size: 0.875rem;
   line-height: 1.6;
 }
@@ -197,4 +210,139 @@
 
 .top-4\/5 {
   top: 80%;
+}
+
+/* Custom animations for the animated background - More subtle */
+@keyframes float-1 {
+  0%,
+  100% {
+    transform: translateY(0px) translateX(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-8px) translateX(4px) rotate(1deg);
+  }
+  50% {
+    transform: translateY(-4px) translateX(-2px) rotate(-0.5deg);
+  }
+  75% {
+    transform: translateY(-12px) translateX(6px) rotate(1.5deg);
+  }
+}
+
+@keyframes float-2 {
+  0%,
+  100% {
+    transform: translateY(0px) translateX(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-6px) translateX(-4px) rotate(-1deg);
+  }
+  50% {
+    transform: translateY(-10px) translateX(3px) rotate(1.5deg);
+  }
+  75% {
+    transform: translateY(-2px) translateX(-5px) rotate(-0.5deg);
+  }
+}
+
+@keyframes float-3 {
+  0%,
+  100% {
+    transform: translateY(0px) translateX(0px) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-7px) translateX(5px) rotate(1deg);
+  }
+  66% {
+    transform: translateY(-3px) translateX(-3px) rotate(-1deg);
+  }
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes wave {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(50%);
+  }
+}
+
+@keyframes spin-slow {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+  }
+  50% {
+    box-shadow:
+      0 0 30px rgba(139, 92, 246, 0.8),
+      0 0 40px rgba(59, 130, 246, 0.3);
+  }
+}
+
+/* Apply animations - Much slower and gentler */
+.animate-float-1 {
+  animation: float-1 15s ease-in-out infinite;
+}
+.animate-float-2 {
+  animation: float-2 18s ease-in-out infinite;
+}
+.animate-float-3 {
+  animation: float-3 20s ease-in-out infinite;
+}
+.animate-twinkle {
+  animation: twinkle 6s ease-in-out infinite;
+}
+.animate-wave {
+  animation: wave 30s linear infinite;
+}
+.animate-spin-slow {
+  animation: spin-slow 60s linear infinite;
+}
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Custom styles for better visual hierarchy */
+.glass-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.bg-discord {
+  background-color: #5865f2;
+}
+
+.bg-discord-dark {
+  background-color: #4752c4;
+}
+
+/* Enhance existing styles */
+body {
+  font-family: "Inter", sans-serif;
+}
+
+.font-mono {
+  font-family: "JetBrains Mono", monospace;
 }

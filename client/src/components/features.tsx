@@ -37,10 +37,10 @@ export default function Features() {
       <div className="container mx-auto px-6">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
           {features.map((feature, index) => (
-            <div key={index} className="glass-card rounded-2xl p-8 shadow-xl feature-card">
+            <div key={index} className="glass-card rounded-2xl p-8 shadow-xl hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 border border-white/20">
               <div className="text-4xl mb-4">{feature.icon}</div>
-              <h3 className="text-xl font-bold text-gray-800 mb-4">{feature.title}</h3>
-              <p className="text-gray-600 leading-relaxed">
+              <h3 className="text-xl font-bold text-white mb-4">{feature.title}</h3>
+              <p className="text-white/80 leading-relaxed">
                 {feature.description}
               </p>
             </div>
