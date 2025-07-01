@@ -3,11 +3,11 @@ export default {
     {
       name: 'sumtube-bot-api',
       script: './dist/index.js',
-      node_args: '--env-file=.env',
       instances: 1,
       exec_mode: 'fork',
       watch: false,
       max_memory_restart: '500M',
+      env_file: '.env',
       env: {
         NODE_ENV: process.env.NODE_ENV || 'production',
         PORT: process.env.PORT || 3000
