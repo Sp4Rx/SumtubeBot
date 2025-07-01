@@ -30,11 +30,11 @@ export default function Header() {
             <span>Add to Discord</span>
           </a>
 
-          <a href="https://replit.com/@Sp4Rx/SumtubeBot"
+          <a href="https://github.com/sp4rx/sumtubebot"
             target="_blank"
-            className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 inline-flex items-center space-x-3">
-            <i className="fas fa-play-circle text-xl"></i>
-            <span>Try on Replit</span>
+            className="bg-gray-800 hover:bg-gray-700 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 inline-flex items-center space-x-3">
+            <i className="fab fa-github text-xl"></i>
+            <span>View on GitHub</span>
           </a>
 
           <a href="#setup"

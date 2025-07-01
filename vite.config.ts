@@ -1,23 +1,11 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
-import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
 export default defineConfig({
-  plugins: [
-    react(),
-    runtimeErrorOverlay(),
-    ...(process.env.NODE_ENV !== "production" &&
-      process.env.REPL_ID !== undefined
-      ? [
-        await import("@replit/vite-plugin-cartographer").then((m) =>
-          m.cartographer(),
-        ),
-      ]
-      : []),
-  ],
+  plugins: [react()],
   define: {
-    'import.meta.env.VITE_DISCORD_APPLICATION_ID': JSON.stringify(process.env.DISCORD_APPLICATION_ID),
+    'import.meta.env.VITE_DISCORD_APPLICATION_ID': JSON.stringify(process.env.VITE_DISCORD_APPLICATION_ID),
   },
   resolve: {
     alias: {
@@ -27,10 +15,11 @@ export default defineConfig({
   },
   root: path.resolve(import.meta.dirname, "client"),
   build: {
-    outDir: path.resolve(import.meta.dirname, "dist/public"),
+    outDir: path.resolve(import.meta.dirname, "dist/client"),
     emptyOutDir: true,
   },
   server: {
+    port: 5173,
     fs: {
       strict: true,
       deny: ["**/.*"],

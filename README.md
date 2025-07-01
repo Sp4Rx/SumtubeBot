@@ -49,25 +49,34 @@ Key Timestamps:
 - **Styling**: Tailwind CSS
 - **UI Components**: Radix UI
 - **Build Tool**: Vite
-- **Deployment**: Replit
+- **Deployment**: 
+  - Frontend: Cloudflare Pages (Free)
+  - Backend: AWS EC2 (Free Tier)
 
 ## 🏗️ Development Setup
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 20+ (for built-in .env file support)
 - npm or yarn
 - Discord Application with Bot Token
 - Google Gemini API Key
 
 ### Environment Variables
 
-Create a `.env` file in the root directory:
+Create a `.env` file in the root directory (copy from template):
+
+```bash
+cp .env.template .env
+# Edit .env with your actual Discord tokens and Gemini API key
+```
+
+Note: Node.js 20+ automatically loads `.env` files with the `--env-file` flag (no dotenv package needed).
 
 ```env
 # Discord Configuration
-DISCORD_TOKEN=your_discord_bot_token
-DISCORD_APPLICATION_ID=your_discord_application_id
+DISCORD_BOT_TOKEN=your_discord_bot_token
+VITE_DISCORD_APPLICATION_ID=your_discord_application_id
 
 # Google Gemini Configuration
 GEMINI_API_KEY=your_gemini_api_key
@@ -94,11 +103,13 @@ NODE_ENV=development
    ```bash
    npm run dev
    ```
+   Frontend will be available at `http://localhost:5173`
+   Backend API will be available at `http://localhost:3000`
 
 4. **Build for production**
    ```bash
    npm run build
-   npm start
+   npm run start:server
    ```
 
 ## 📁 Project Structure
@@ -144,21 +155,42 @@ The bot needs the following Discord permissions:
 
 ## 🌐 Deployment
 
-### Replit Deployment
+This project is designed for a split deployment architecture:
 
-This project is configured for easy deployment on Replit:
+### 🚀 Quick Deployment Guide
 
-1. Fork the [Replit project](https://replit.com/@Sp4Rx/SumtubeBot)
-2. Configure environment variables in Replit Secrets
-3. Run the project
+**Frontend → Cloudflare Pages (Free)**
+- Automatic builds from GitHub
+- Global CDN distribution
+- Zero configuration SSL
 
-### Other Platforms
+**Backend → AWS EC2 (Free Tier)**
+- t2.micro instance (Free for 12 months)
+- PM2 for process management
+- Discord bot + API server
 
-The bot can be deployed on various platforms:
-- **Heroku**: Use the provided `package.json` scripts
-- **Railway**: Configure with `railway.json`
-- **DigitalOcean**: Deploy using Docker or App Platform
-- **AWS/GCP**: Use container services or serverless functions
+### 📋 Detailed Setup
+
+See the comprehensive **[DEPLOY.md](./DEPLOY.md)** guide for:
+- Step-by-step AWS EC2 setup
+- Cloudflare Pages configuration  
+- Environment variable management
+- Security best practices
+- Cost optimization tips
+
+### 💰 Cost Breakdown (Free Tier)
+- **EC2 t2.micro**: Free for 12 months
+- **Cloudflare Pages**: Free tier (unlimited sites)
+- **Gemini API**: Free tier available
+- **Total Monthly Cost**: $0 (during free tier period)
+
+### Alternative Deployments
+
+The bot can also be deployed on:
+- **Railway**: Use provided configurations
+- **DigitalOcean**: App Platform or Droplets
+- **Heroku**: With the provided scripts
+- **Google Cloud**: Compute Engine or Cloud Run
 
 ## 📊 Features in Detail
 
@@ -192,14 +224,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🔗 Links
 
-- **🐛 Bug Reports**: [GitHub Issues](https://github.com/Sp4Rx/sumtubebot/issues)
+- **🐛 Bug Reports**: [GitHub Issues](https://github.com/sp4rx/sumtubebot/issues)
+- **📚 Documentation**: [Deployment Guide](./DEPLOY.md)
+- **🚀 Quick Start**: [Quick Start Guide](./QUICK-START.md)
 
 ## 🙏 Acknowledgments
 
 - **Google Gemini AI** for powerful video analysis capabilities
 - **Discord.js** for excellent Discord API integration
 - **React & Tailwind CSS** for the beautiful frontend interface
-- **Replit** for hosting and development platform
+- **Cloudflare Pages** for reliable frontend hosting
+- **AWS EC2** for scalable backend infrastructure
 
 ---
 
