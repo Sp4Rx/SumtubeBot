@@ -23,6 +23,12 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: path.resolve(import.meta.dirname, "dist/client"),
       emptyOutDir: true,
+      assetsDir: "assets",
+      rollupOptions: {
+        output: {
+          manualChunks: undefined, // Disable manual chunking for simpler deployment
+        },
+      },
     },
     server: {
       port: 5173,

@@ -102,7 +102,7 @@ git pull origin "$BRANCH"
 
 # Install dependencies
 log "📦 Installing dependencies..."
-npm ci --only=production
+npm ci
 
 # Build application
 log "🔨 Building server application..."
