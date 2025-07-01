@@ -1,309 +1,391 @@
 # SumTube Bot Deployment Guide
 
-This guide covers deploying the SumTube Bot with the frontend on **Cloudflare Pages** and the backend API + Discord bot on **AWS EC2**.
+This guide covers deploying SumTube Bot to production environments.
 
-## Architecture Overview
+## 🏗️ Architecture Overview
 
-- **Frontend**: React app hosted on Cloudflare Pages
-- **Backend**: Node.js API server hosted on AWS EC2 (Free Tier eligible)
-- **Discord Bot**: Runs alongside the API server on EC2
-- **AI Service**: Google Gemini API for video summarization
+- **Frontend**: Deployed on Cloudflare Pages (static site)
+- **Backend**: Deployed on Ubuntu server with PM2 (Discord bot + API)
+- **Database**: No database required (stateless)
 
-## Prerequisites
+## 📋 Prerequisites
 
-1. **Accounts Required**:
-   - Cloudflare account (free)
-   - AWS account (free tier)
-   - Discord Developer account
-   - Google AI Studio account (for Gemini API)
+- Ubuntu 20.04+ server (AWS EC2, DigitalOcean, etc.)
+- Node.js 20+ (for built-in .env file support)
+- Domain name (optional, for SSL)
+- Discord Application & Bot Token
+- Google Gemini API Key
 
-2. **Local Development**:
-   - Node.js 20+ (for built-in .env file support)
-   - Git
-   - GitHub repository
+---
 
-## Part 1: Setting Up Environment Variables
+## 🚀 Quick Deployment
 
-### Required API Keys
+### 1. Cloudflare Pages (Frontend)
 
-1. **Discord Bot Token**:
-   - Visit [Discord Developer Portal](https://discord.com/developers/applications)
-   - Create new application → Bot → Copy token
-   - Enable necessary bot permissions and intents
+The frontend is automatically deployed via Cloudflare Pages when you push to your repository.
 
-2. **Google Gemini API Key**:
-   - Visit [Google AI Studio](https://aistudio.google.com/)
-   - Create API key
-   - Enable Gemini API access
+**Setup Steps:**
+1. Fork this repository
+2. Connect to Cloudflare Pages
+3. Configure build settings:
+   - **Build command**: `npm run build:client`
+   - **Build output directory**: `dist/client`
+   - **Root directory**: (leave empty)
 
-### Environment Variables Setup
+**Environment Variables in Cloudflare:**
+```
+VITE_DISCORD_APPLICATION_ID=your_discord_application_id_here
+```
 
-#### For Local Development
+**If deployment fails with "wrangler.toml not valid":**
+- The issue has been fixed in the latest version
+- Ensure your wrangler.toml includes `pages_build_output_dir = "dist/client"`
 
-Create a `.env` file in the project root:
+### 2. Ubuntu Server (Backend)
+
+#### Option A: Automated Setup (Recommended)
 
 ```bash
-# Copy from .env.example
-cp .env.example .env
+# 1. Download the setup script
+wget https://raw.githubusercontent.com/Sp4Rx/sumtubebot/main/deploy/ubuntu-server-setup.sh
+
+# 2. Make it executable and run
+chmod +x ubuntu-server-setup.sh
+./ubuntu-server-setup.sh
+
+# 3. Clone your repository
+cd /home/$(whoami)/sumtubebot
+git clone https://github.com/Sp4Rx/sumtubebot.git .
+
+# 4. Setup environment variables
+./setup-env.sh
+nano .env  # Edit with your actual tokens
+
+# 5. Deploy the application
+./production-deploy.sh
 ```
 
-Fill in your actual values:
-```env
-DISCORD_BOT_TOKEN=your_actual_discord_token
-GEMINI_API_KEY=your_actual_gemini_key
-NODE_ENV=development
-PORT=3000
-CORS_ORIGIN=http://localhost:5173
-```
+#### Option B: Manual Setup
 
-#### For Production (EC2)
+Follow the manual setup instructions below.
 
-Environment variables will be set via PM2 ecosystem file or system environment.
+---
 
-## Part 2: AWS EC2 Setup (Free Tier)
+## 🔧 Manual Server Setup
 
-### 1. Launch EC2 Instance
-
-1. **Instance Configuration**:
-   - AMI: Amazon Linux 2023 (free tier eligible)
-   - Instance Type: t2.micro (free tier)
-   - Storage: 8GB GP2 (free tier)
-   - Security Group: Allow HTTP (80), HTTPS (443), SSH (22), and Custom TCP (3000)
-
-2. **Security Group Rules**:
-   ```
-   SSH (22) - Your IP
-   HTTP (80) - 0.0.0.0/0
-   HTTPS (443) - 0.0.0.0/0
-   Custom TCP (3000) - 0.0.0.0/0
-   ```
-
-### 2. Connect to EC2 and Setup
+### 1. Initial Server Setup
 
 ```bash
-# Connect to your Ubuntu EC2 instance
-ssh -i your-key.pem ubuntu@ec2-3-110-118-25.ap-south-1.compute.amazonaws.com
+# Update system
+sudo apt update && sudo apt upgrade -y
 
-# Upload and run the setup script
-scp -i your-key.pem deploy/install-dependencies.sh ubuntu@ec2-3-110-118-25.ap-south-1.compute.amazonaws.com:~/
-ssh -i your-key.pem ubuntu@ec2-3-110-118-25.ap-south-1.compute.amazonaws.com
-chmod +x install-dependencies.sh
-./install-dependencies.sh
+# Install dependencies
+sudo apt install -y curl wget git unzip software-properties-common \
+    apt-transport-https ca-certificates gnupg lsb-release \
+    htop nano vim ufw fail2ban nginx
+
+# Install Node.js 20.x
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+
+# Install PM2 globally
+sudo npm install -g pm2
+
+# Setup PM2 startup
+sudo pm2 startup systemd -u $USER --hp $HOME
 ```
 
-### 3. Deploy Application to EC2
-
-#### Option A: From Windows (Local Machine)
-
-```batch
-# Build locally using Windows script
-deploy\deploy-windows.bat
-
-# Upload to EC2 using Windows script
-deploy\upload-to-ec2.bat "path\to\your-key.pem"
-```
-
-#### Option B: Manual Upload
+### 2. Security Configuration
 
 ```bash
-# Build the application locally
-npm run build
+# Configure firewall
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow ssh
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw allow 3000/tcp
+sudo ufw --force enable
 
-# Upload files to EC2
-scp -i your-key.pem -r dist/ ecosystem.config.js package.json ubuntu@ec2-3-110-118-25.ap-south-1.compute.amazonaws.com:/opt/sumtube-bot/
+# Start fail2ban
+sudo systemctl enable fail2ban
+sudo systemctl start fail2ban
 ```
 
-#### On EC2 Instance
+### 3. Application Deployment
 
 ```bash
-# SSH into EC2
-ssh -i your-key.pem ubuntu@ec2-3-110-118-25.ap-south-1.compute.amazonaws.com
+# Create application directory
+mkdir -p /home/$USER/sumtubebot
+cd /home/$USER/sumtubebot
 
-# Set up environment variables (first time only)
-cd /opt/sumtube-bot
-./deploy/set-environment.sh
+# Clone repository
+git clone https://github.com/Sp4Rx/sumtubebot.git .
 
-# Deploy the application
-./deploy/deploy.sh
+# Create environment file
+cp .env.template .env
+nano .env  # Edit with your actual values
+
+# Install dependencies
+npm ci --only=production
+
+# Build application
+npm run build:server
+
+# Start with PM2
+pm2 start ecosystem.config.js --name sumtubebot
+pm2 save
 ```
 
-### 4. Set Environment Variables on EC2
-
-**Option 1: Using PM2 Ecosystem (Recommended)**
-
-Edit `ecosystem.config.js` on EC2:
-```javascript
-module.exports = {
-  apps: [{
-    name: 'sumtube-bot-api',
-    script: './dist/index.js',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 3000,
-      DISCORD_BOT_TOKEN: 'your_actual_token',
-      GEMINI_API_KEY: 'your_actual_key',
-      CORS_ORIGIN: 'https://your-pages-domain.pages.dev'
-    }
-  }]
-};
-```
-
-**Option 2: System Environment Variables**
+### 4. Nginx Configuration
 
 ```bash
-# Add to ~/.bashrc or /etc/environment
-export DISCORD_BOT_TOKEN="your_token"
-export GEMINI_API_KEY="your_key"
-export NODE_ENV="production"
-export PORT="3000"
-export CORS_ORIGIN="https://your-pages-domain.pages.dev"
+# Create nginx configuration
+sudo nano /etc/nginx/sites-available/sumtubebot
 ```
 
-### 5. Optional: Set up Nginx (for domain/SSL)
+Add the following configuration:
 
-```bash
-# Install Nginx
-sudo yum install -y nginx
-
-# Configure Nginx proxy
-sudo tee /etc/nginx/conf.d/sumtube.conf > /dev/null <<EOF
+```nginx
 server {
     listen 80;
-    server_name your-domain.com;
+    server_name your-domain.com www.your-domain.com;
     
-    location / {
-        proxy_pass http://localhost:3000;
+    # Health check endpoint
+    location /health {
+        proxy_pass http://localhost:3000/health;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_cache_bypass \$http_upgrade;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+    
+    # Default response for other requests
+    location / {
+        return 503;
     }
 }
-EOF
-
-# Start Nginx
-sudo systemctl start nginx
-sudo systemctl enable nginx
 ```
 
-## Part 3: Cloudflare Pages Setup
-
-### 1. Prepare Repository
-
-Push your code to GitHub with the changes made in this guide.
-
-### 2. Create Cloudflare Pages Project
-
-1. Go to Cloudflare Dashboard → Pages → Create a project
-2. Connect to GitHub and select your repository
-3. Configure build settings:
-
-   **Build Configuration**:
-   ```
-   Framework preset: None
-   Build command: npm run build:client
-   Build output directory: dist/client
-   Root directory: (leave empty)
-   ```
-
-   **Environment Variables**:
-   ```
-   VITE_DISCORD_APPLICATION_ID = your_discord_application_id_here
-   ```
-
-
-
-### 4. Configure Custom Domain (Optional)
-
-1. Add your domain to Cloudflare Pages
-2. Update DNS settings
-3. SSL will be automatically configured
-
-## Part 4: Final Configuration
-
-### Update Frontend API URL
-
-Update `wrangler.toml` and rebuild:
-
-```toml
-[build.environment_variables]
-```
-
-### Test the Deployment
-
-1. **Health Check**: Visit `https://your-ec2-domain.com/health`
-2. **Frontend**: Visit your Cloudflare Pages URL
-3. **Discord Bot**: Invite bot to server and test with YouTube links
-
-## Part 5: Monitoring and Maintenance
-
-### EC2 Monitoring
+Enable the site:
 
 ```bash
-# Check application status
-pm2 status
-pm2 logs sumtube-bot-api
-
-# Monitor system resources
-htop
-df -h
+sudo ln -sf /etc/nginx/sites-available/sumtubebot /etc/nginx/sites-enabled/
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo nginx -t && sudo systemctl reload nginx
 ```
 
-### Cloudflare Pages
+### 5. SSL Certificate (Optional)
 
-- Monitor deployments in Cloudflare Dashboard
-- Check build logs for any issues
-- Set up notifications for failed deployments
+```bash
+# Install Certbot
+sudo apt install certbot python3-certbot-nginx
 
-## Cost Breakdown (Free Tier)
+# Get SSL certificate
+sudo certbot --nginx -d your-domain.com -d www.your-domain.com
+```
 
-- **EC2 t2.micro**: Free for 12 months (750 hours/month)
-- **Cloudflare Pages**: Free tier (500 builds/month, unlimited sites)
-- **Gemini API**: Free tier available
-- **Discord Bot**: Free
+---
 
-## Troubleshooting
+## 📝 Environment Variables
+
+### Backend (.env)
+```bash
+# Discord Bot Configuration
+DISCORD_BOT_TOKEN=your_discord_bot_token_here
+
+# Google Gemini AI Configuration  
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Discord Application ID (for invite links)
+VITE_DISCORD_APPLICATION_ID=your_discord_application_id_here
+
+# Server Configuration
+NODE_ENV=production
+PORT=3000
+```
+
+### Frontend (Cloudflare Pages)
+```
+VITE_DISCORD_APPLICATION_ID=your_discord_application_id_here
+```
+
+---
+
+## 🔄 Deployment Scripts
+
+### Ubuntu Server Setup
+```bash
+# Initial server setup (run once)
+./deploy/ubuntu-server-setup.sh
+```
+
+**Features:**
+- ✅ Installs Node.js 20.x, PM2, nginx
+- ✅ Configures firewall and security
+- ✅ Sets up SSL certificate preparation
+- ✅ Creates deployment helper scripts
+- ✅ Configures automatic updates
+
+### Production Deployment
+```bash
+# Deploy/update application
+./deploy/production-deploy.sh [branch]
+```
+
+**Features:**
+- ✅ Pre-deployment checks
+- ✅ Automated backup creation
+- ✅ Git pull and dependency installation
+- ✅ Application build and health checks
+- ✅ PM2 process management
+- ✅ nginx configuration reload
+
+---
+
+## 🛠️ Management Commands
+
+### PM2 Process Management
+```bash
+# View status
+pm2 status
+
+# View logs
+pm2 logs sumtubebot
+
+# Restart application
+pm2 restart sumtubebot
+
+# Stop application
+pm2 stop sumtubebot
+
+# Monitor resources
+pm2 monit
+```
+
+### System Monitoring
+```bash
+# Check application health
+curl http://localhost:3000/health
+
+# Check nginx status
+sudo systemctl status nginx
+
+# Check firewall status
+sudo ufw status
+
+# Check system resources
+htop
+```
+
+---
+
+## 🔍 Troubleshooting
 
 ### Common Issues
 
-1. 
-2. **Discord Bot Not Responding**: Verify `DISCORD_BOT_TOKEN`
-3. **Gemini API Errors**: Check `GEMINI_API_KEY` and quota
-4. **EC2 Connection Issues**: Verify security group settings
+#### 1. Cloudflare Pages Not Loading
+**Problem**: Build succeeds but page doesn't load
+**Solution**: 
+- Check `wrangler.toml` has `pages_build_output_dir = "dist/client"`
+- Ensure SPA routing is configured with redirects
+- Verify environment variables are set in Cloudflare
 
-### Logs
-
+#### 2. Discord Bot Not Responding
+**Problem**: Bot appears offline or doesn't respond
+**Solutions**:
 ```bash
-# PM2 logs
-pm2 logs sumtube-bot-api
+# Check application logs
+pm2 logs sumtubebot
 
-# System logs
-sudo journalctl -u nginx -f  # If using Nginx
+# Verify environment variables
+cat .env | grep DISCORD_BOT_TOKEN
+
+# Check bot permissions in Discord
+# Ensure bot has required permissions in your server
 ```
 
-## Security Best Practices
-
-1. **Never commit API keys** to version control
-2. **Use IAM roles** for EC2 instead of access keys when possible
-3. **Enable CloudFlare security features** (DDoS protection, WAF)
-4. **Regular security updates** on EC2
-5. **Monitor API usage** and set up alerts
-
-## Updating the Application
-
-Use the provided deployment script:
-
+#### 3. Health Check Failing
+**Problem**: `/health` endpoint returns 503
+**Solutions**:
 ```bash
-# On your local machine
-./deploy/deploy.sh
+# Check if application is running
+pm2 status
 
-# Or manually deploy new changes
-npm run build:server
-# Upload to EC2 and restart PM2
+# Check application logs
+pm2 logs sumtubebot --lines 50
+
+# Verify port is listening
+netstat -tlnp | grep 3000
 ```
 
-This setup provides a robust, scalable, and cost-effective deployment for your SumTube Bot! 
+#### 4. SSL Certificate Issues
+**Solutions**:
+```bash
+# Check certificate status
+sudo certbot certificates
+
+# Renew certificate
+sudo certbot renew
+
+# Test nginx configuration
+sudo nginx -t
+```
+
+### Log Locations
+- **Application logs**: `pm2 logs sumtubebot`
+- **nginx logs**: `/var/log/nginx/`
+- **System logs**: `journalctl -u nginx`
+
+---
+
+## 🔐 Security Best Practices
+
+1. **Environment Variables**: Never commit `.env` files
+2. **Firewall**: Only allow necessary ports
+3. **SSL**: Always use HTTPS in production
+4. **Updates**: Keep system and dependencies updated
+5. **Monitoring**: Set up uptime monitoring
+6. **Backups**: Regular deployment backups
+7. **Access**: Use SSH keys, disable password authentication
+
+---
+
+## 📊 Monitoring & Alerts
+
+### Uptime Monitoring
+The application includes Better Stack monitoring integration:
+- Status badge on homepage
+- Real-time uptime tracking
+- Alert notifications
+
+### Application Monitoring
+```bash
+# View real-time metrics
+pm2 monit
+
+# Check resource usage
+htop
+
+# Monitor application logs
+pm2 logs sumtubebot --follow
+```
+
+---
+
+## 🆘 Support
+
+If you encounter issues:
+1. Check the troubleshooting section above
+2. Review application logs: `pm2 logs sumtubebot`
+3. Verify environment configuration
+4. Check system resources and network connectivity
+5. Create an issue on GitHub with detailed error logs
+
+For immediate help:
+- 📧 Email: support@suvajit.in
+- 🐛 GitHub Issues: [Create Issue](https://github.com/Sp4Rx/sumtubebot/issues/new) 

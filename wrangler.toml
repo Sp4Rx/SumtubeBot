@@ -1,21 +1,6 @@
 # Cloudflare Pages configuration for SumTube Bot frontend
-name = "sumtube-bot"
+name = "sumtubebot"
 compatibility_date = "2024-01-01"
 
-[build]
-command = "npm run build:client"
-cwd = "."
-watch_dir = "client"
-
-[build.environment_variables]
-VITE_DISCORD_APPLICATION_ID = "your_discord_application_id_here"
-
-
-
-[[headers]]
-for = "/*"
-[headers.values]
-  X-Frame-Options = "DENY"
-  X-Content-Type-Options = "nosniff"
-  X-XSS-Protection = "1; mode=block"
-  Referrer-Policy = "strict-origin-when-cross-origin" 
+# Pages-specific configuration
+pages_build_output_dir = "dist/client" 

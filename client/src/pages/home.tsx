@@ -15,11 +15,25 @@ export default function Home() {
           className="w-28 h-28 md:w-32 md:h-32" />
       </a>
 
-      {/* Status Badge */}
-      <div className="fixed top-4 left-4 z-40 glass-card rounded-full px-4 py-2 shadow-lg max-w-[calc(100vw-8rem)] md:max-w-none">
-        <div className="flex items-center space-x-2">
-          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-          <span className="text-sm font-medium text-white">Bot Online</span>
+      {/* Status Badges */}
+      <div className="fixed top-4 left-4 z-40 flex flex-col gap-2">
+        {/* Bot Online Status */}
+        <div className="glass-card rounded-full px-4 py-2 shadow-lg">
+          <div className="flex items-center space-x-2">
+            {/* Better Stack Uptime Badge */}
+            <a
+              href="https://sumtubebot.betteruptime.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:scale-105 transition-transform duration-200"
+            >
+              <img
+                src="https://uptime.betterstack.com/status-badges/v3/monitor/20bnv.svg"
+                alt="Better Stack Uptime"
+                className="h-6 rounded shadow-lg"
+              />
+            </a>
+          </div>
         </div>
       </div>
 
