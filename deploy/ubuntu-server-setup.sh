@@ -221,7 +221,7 @@ log "✅ Environment setup script created"
 # Ask user about nginx setup
 echo ""
 log "🌐 Optional: Nginx Setup for Public Stats API"
-info "This will expose ONLY the /api/bot/stats endpoint publicly via HTTP"
+info "This will expose ONLY the /api/bot/stats endpoint publicly via HTTPS"
 info "The Discord bot functionality will remain internal and secure"
 echo ""
 read -p "Do you want to set up Nginx for public stats API access? [y/N]: " -n 1 -r
@@ -232,26 +232,45 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo ""
     info "Please provide your server's public DNS name or IP address"
     info "Examples:"
+    info "  - sumtubebot.example.com (recommended for HTTPS)"
     info "  - ec2-3-110-118-25.ap-south-1.compute.amazonaws.com"
-    info "  - 203.0.113.1"
-    info "  - myserver.example.com"
+    info "  - 203.0.113.1 (will use HTTP only)"
     echo ""
     read -p "Enter server DNS/IP: " SERVER_DNS
 
     if [ -z "$SERVER_DNS" ]; then
         warning "No DNS provided. Skipping Nginx setup."
-        warning "You can run './deploy/setup-nginx.sh <your-dns>' later"
+        warning "You can run './deploy/setup-nginx.sh <your-dns> <email>' later"
     else
+        # Check if it's an IP address
+        if [[ "$SERVER_DNS" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            warning "IP address detected. HTTPS will be disabled."
+            USE_HTTPS_SETUP=""
+        else
+            info "Domain name detected. HTTPS will be enabled with Let's Encrypt."
+            echo ""
+            read -p "Enter email for SSL certificate notifications: " SSL_EMAIL
+            if [ -z "$SSL_EMAIL" ]; then
+                SSL_EMAIL="admin@localhost"
+                warning "No email provided. Using default: $SSL_EMAIL"
+            fi
+            USE_HTTPS_SETUP=""
+        fi
+
         log "🌐 Setting up Nginx for: $SERVER_DNS"
         if [ -f "./deploy/setup-nginx.sh" ]; then
-            ./deploy/setup-nginx.sh "$SERVER_DNS"
+            if [[ "$SERVER_DNS" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                ./deploy/setup-nginx.sh "$SERVER_DNS" "$SSL_EMAIL" "http_only"
+            else
+                ./deploy/setup-nginx.sh "$SERVER_DNS" "$SSL_EMAIL"
+            fi
         else
             warning "setup-nginx.sh not found. Please ensure you have the complete deployment scripts."
         fi
     fi
 else
     info "Skipping Nginx setup. Bot will only be accessible internally."
-    info "To set up Nginx later, run: ./deploy/setup-nginx.sh <your-server-dns>"
+    info "To set up Nginx later, run: ./deploy/setup-nginx.sh <your-server-dns> <email>"
 fi
 
 # System information
@@ -278,7 +297,11 @@ echo "- Check firewall: sudo ufw status"
 echo "- Health check: curl http://localhost:3000/health"
 
 if [[ $REPLY =~ ^[Yy]$ ]] && [ ! -z "$SERVER_DNS" ]; then
-    echo "- Public stats: curl http://$SERVER_DNS/api/bot/stats"
+    if [[ "$SERVER_DNS" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo "- Public stats: curl http://$SERVER_DNS/api/bot/stats"
+    else
+        echo "- Public stats: curl https://$SERVER_DNS/api/bot/stats"
+    fi
     echo "- Nginx status: sudo systemctl status nginx"
     echo "- Nginx logs: sudo tail -f /var/log/nginx/access.log"
 fi
@@ -291,5 +314,9 @@ warning "3. Secure your Discord bot token and API keys"
 warning "4. The bot will be accessible internally via: http://localhost:3000"
 
 if [[ $REPLY =~ ^[Yy]$ ]] && [ ! -z "$SERVER_DNS" ]; then
-    warning "5. Public stats API is available at: http://$SERVER_DNS/api/bot/stats"
+    if [[ "$SERVER_DNS" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        warning "5. Public stats API is available at: http://$SERVER_DNS/api/bot/stats"
+    else
+        warning "5. Public stats API is available at: https://$SERVER_DNS/api/bot/stats"
+    fi
 fi
