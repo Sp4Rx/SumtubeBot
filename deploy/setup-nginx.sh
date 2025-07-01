@@ -175,8 +175,17 @@ fi
 
 # Configure rate limiting
 log "🛡️  Configuring rate limiting..."
-# Add rate limiting to the main nginx.conf http block
-sudo sed -i '/^http {/a\\n    # Rate limiting zones for SumTube Bot\n    limit_req_zone $binary_remote_addr zone=stats_limit:10m rate=10r/m;\n    limit_req_log_level warn;\n    limit_req_status 429;\n' /etc/nginx/nginx.conf
+# Remove any existing problematic rate limiting config files
+sudo rm -f /etc/nginx/conf.d/rate-limiting.conf
+
+# Check if rate limiting is already configured in nginx.conf
+if ! grep -q "limit_req_zone.*stats_limit" /etc/nginx/nginx.conf; then
+    # Add rate limiting to the main nginx.conf http block
+    sudo sed -i '/^http {/a\\n    # Rate limiting zones for SumTube Bot\n    limit_req_zone $binary_remote_addr zone=stats_limit:10m rate=10r/m;\n    limit_req_log_level warn;\n    limit_req_status 429;\n' /etc/nginx/nginx.conf
+    log "✅ Rate limiting configuration added"
+else
+    log "✅ Rate limiting already configured"
+fi
 
 # Enable the site and disable default
 log "🔗 Enabling SumTube Bot site..."
