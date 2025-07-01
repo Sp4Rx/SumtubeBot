@@ -74,6 +74,7 @@ temp/
 
 # Local ecosystem config with secrets
 ecosystem.config.local.js
+ecosystem.config.local.mjs
 
 # Environment files with secrets
 .sumtube-env

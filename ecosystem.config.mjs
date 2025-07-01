@@ -1,21 +1,20 @@
-// Example PM2 configuration with environment variables
-// Copy this to ecosystem.config.local.js and fill in your actual values
-// DO NOT commit ecosystem.config.local.js to git
-
-module.exports = {
+export default {
   apps: [
     {
       name: 'sumtube-bot-api',
       script: './dist/index.js',
+      node_args: '--env-file=.env',
       instances: 1,
       exec_mode: 'fork',
       watch: false,
       max_memory_restart: '500M',
       env: {
-        NODE_ENV: 'production',
-        PORT: 3000,
-        DISCORD_BOT_TOKEN: 'your_actual_discord_bot_token_here',
-        GEMINI_API_KEY: 'your_actual_gemini_api_key_here'
+        NODE_ENV: process.env.NODE_ENV || 'production',
+        PORT: process.env.PORT || 3000
+        // Environment variables will be loaded from system environment
+        // Set these on your EC2 instance:
+        // export DISCORD_BOT_TOKEN="your_actual_token"
+        // export GEMINI_API_KEY="your_actual_key"
       },
       error_file: './logs/err.log',
       out_file: './logs/out.log',

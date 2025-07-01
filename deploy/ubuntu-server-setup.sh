@@ -158,7 +158,7 @@ npm run build:server
 
 # Restart PM2 process
 log "🔄 Restarting application..."
-pm2 restart sumtubebot || pm2 start ecosystem.config.js
+pm2 restart sumtubebot || pm2 start ecosystem.config.mjs
 
 # Save PM2 configuration
 pm2 save

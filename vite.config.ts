@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     root: path.resolve(import.meta.dirname, "client"),
-    publicDir: path.resolve(import.meta.dirname, "client"), // Ensure _headers and _redirects are copied
+    publicDir: path.resolve(import.meta.dirname, "client", "public"), // Only copy files from public directory
     envDir: path.resolve(import.meta.dirname), // Look for .env files in project root
     build: {
       outDir: path.resolve(import.meta.dirname, "dist/client"),

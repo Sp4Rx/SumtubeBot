@@ -75,11 +75,11 @@ fi
 # Check if .env file exists
 if [ ! -f ".env" ]; then
     warning ".env file not found. Creating template..."
-    if [ ! -f ".env.template" ]; then
-        error ".env.template file not found. Please ensure you have the complete project."
+    if [ ! -f "env.template" ]; then
+        error "env.template file not found. Please ensure you have the complete project."
         exit 1
     fi
-    cp .env.template .env
+    cp env.template .env
     error "Please configure your .env file before deploying:"
     info "nano .env"
     exit 1
@@ -133,7 +133,9 @@ if pm2 list | grep -q "$APP_NAME"; then
     pm2 restart "$APP_NAME"
 else
     log "🆕 Starting new PM2 process..."
-    if [ -f "ecosystem.config.js" ]; then
+    if [ -f "ecosystem.config.mjs" ]; then
+        pm2 start ecosystem.config.mjs --name "$APP_NAME"
+    elif [ -f "ecosystem.config.js" ]; then
         pm2 start ecosystem.config.js --name "$APP_NAME"
     else
         pm2 start dist/index.js --name "$APP_NAME"
