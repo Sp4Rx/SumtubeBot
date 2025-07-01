@@ -1,7 +1,7 @@
 export default {
   apps: [
     {
-      name: 'sumtube-bot-api',
+      name: 'sumtubebot',
       script: './dist/index.js',
       instances: 1,
       exec_mode: 'fork',
@@ -9,12 +9,8 @@ export default {
       max_memory_restart: '500M',
       env_file: '.env',
       env: {
-        NODE_ENV: process.env.NODE_ENV || 'production',
-        PORT: process.env.PORT || 3000
-        // Environment variables will be loaded from system environment
-        // Set these on your EC2 instance:
-        // export DISCORD_BOT_TOKEN="your_actual_token"
-        // export GEMINI_API_KEY="your_actual_key"
+        NODE_ENV: 'production',
+        PORT: 3000
       },
       error_file: './logs/err.log',
       out_file: './logs/out.log',

@@ -218,6 +218,42 @@ EOF
 chmod +x $APP_DIR/setup-env.sh
 log "✅ Environment setup script created"
 
+# Ask user about nginx setup
+echo ""
+log "🌐 Optional: Nginx Setup for Public Stats API"
+info "This will expose ONLY the /api/bot/stats endpoint publicly via HTTP"
+info "The Discord bot functionality will remain internal and secure"
+echo ""
+read -p "Do you want to set up Nginx for public stats API access? [y/N]: " -n 1 -r
+echo ""
+
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    # Get server DNS from user
+    echo ""
+    info "Please provide your server's public DNS name or IP address"
+    info "Examples:"
+    info "  - ec2-3-110-118-25.ap-south-1.compute.amazonaws.com"
+    info "  - 203.0.113.1"
+    info "  - myserver.example.com"
+    echo ""
+    read -p "Enter server DNS/IP: " SERVER_DNS
+
+    if [ -z "$SERVER_DNS" ]; then
+        warning "No DNS provided. Skipping Nginx setup."
+        warning "You can run './deploy/setup-nginx.sh <your-dns>' later"
+    else
+        log "🌐 Setting up Nginx for: $SERVER_DNS"
+        if [ -f "./deploy/setup-nginx.sh" ]; then
+            ./deploy/setup-nginx.sh "$SERVER_DNS"
+        else
+            warning "setup-nginx.sh not found. Please ensure you have the complete deployment scripts."
+        fi
+    fi
+else
+    info "Skipping Nginx setup. Bot will only be accessible internally."
+    info "To set up Nginx later, run: ./deploy/setup-nginx.sh <your-server-dns>"
+fi
+
 # System information
 log "📊 System Information:"
 info "OS: $(lsb_release -d | cut -f2)"
@@ -240,9 +276,20 @@ echo "- Monitor processes: pm2 monit"
 echo "- Restart app: pm2 restart sumtubebot"
 echo "- Check firewall: sudo ufw status"
 echo "- Health check: curl http://localhost:3000/health"
+
+if [[ $REPLY =~ ^[Yy]$ ]] && [ ! -z "$SERVER_DNS" ]; then
+    echo "- Public stats: curl http://$SERVER_DNS/api/bot/stats"
+    echo "- Nginx status: sudo systemctl status nginx"
+    echo "- Nginx logs: sudo tail -f /var/log/nginx/access.log"
+fi
+
 echo ""
 warning "Remember to:"
 warning "1. This is configured as an internal server (no public web access)"
 warning "2. Only port 3000 is open for the Discord bot API"
 warning "3. Secure your Discord bot token and API keys"
 warning "4. The bot will be accessible internally via: http://localhost:3000"
+
+if [[ $REPLY =~ ^[Yy]$ ]] && [ ! -z "$SERVER_DNS" ]; then
+    warning "5. Public stats API is available at: http://$SERVER_DNS/api/bot/stats"
+fi
