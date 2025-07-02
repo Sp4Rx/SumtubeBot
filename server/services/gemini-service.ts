@@ -4,7 +4,7 @@ const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY || ""
 });
 
-export const model = 'gemini-2.5-flash';
+export const model = 'gemini-2.5-pro';
 
 export interface VideoSummaryData {
   summary: string;
