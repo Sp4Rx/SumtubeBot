@@ -40,7 +40,7 @@ if [ -z "$1" ]; then
 fi
 
 SERVER_DNS="$1"
-EMAIL="${2:-admin@localhost}"
+EMAIL="heysuvajit@gmail.com"
 HTTP_ONLY="${3:-}"
 APP_PORT="${4:-3000}"
 
