@@ -23,11 +23,12 @@ export async function generateVideoSummary(videoUrl: string, videoId: string): P
     // Create a detailed prompt for better YouTube video summaries
     const prompt = `
     Analyze the following YouTube video and generate a concise summary formatted for a Discord message under 1700 characters.
-    - Start with a short summary summarizing the overall theme or purpose of the video.
-    - Each point must begin with a timestamp in [m:ss] format (e.g., [1:15]).
+    - Compartmentalize the whole video into broad headers like an expert storyteller
+    - Start with a short synopsis summarizing the overall theme or purpose of the video, follow that with all relevant broad headers
+    - Each broadheader must begin with a timestamp in [m:ss] format (e.g., [1:15]).
     - Format the timestamp [m:ss] as a clickable hyperlink like: https://www.youtube.com/watch?v=${videoId}#t=[SECONDS]. Where [SECONDS] is the total seconds for the timestamp (e.g., 75 instead of 01:15)
     - Do not include any other text than the summary. minimalistic.
-    - Add important information like code, links, images, problems, solutions, etc. also.
+    - Add important information like code, links, images, problems, solutions, etc. also. 
     `;
 
     console.log('📝 Created prompt for video analysis');
