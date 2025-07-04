@@ -201,7 +201,7 @@ DISCORD_BOT_TOKEN=your_discord_bot_token_here
 # Google Gemini AI Configuration  
 GEMINI_API_KEY=your_gemini_api_key_here
 
-# Discord Application ID (for invite links)
+# Discord Application ID (for invite links and slash commands)
 VITE_DISCORD_APPLICATION_ID=your_discord_application_id_here
 
 # Server Configuration
@@ -304,6 +304,7 @@ pm2 logs sumtubebot
 
 # Verify environment variables
 cat .env | grep DISCORD_BOT_TOKEN
+cat .env | grep VITE_DISCORD_APPLICATION_ID
 
 # Check bot permissions in Discord
 # Ensure bot has required permissions in your server

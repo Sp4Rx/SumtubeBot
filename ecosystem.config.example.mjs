@@ -15,6 +15,7 @@ export default {
         NODE_ENV: 'production',
         PORT: 3000,
         DISCORD_BOT_TOKEN: 'your_actual_discord_bot_token_here',
+        VITE_DISCORD_APPLICATION_ID: 'your_actual_discord_application_id_here',
         GEMINI_API_KEY: 'your_actual_gemini_api_key_here'
       },
       error_file: './logs/err.log',

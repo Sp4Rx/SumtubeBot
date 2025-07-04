@@ -138,9 +138,10 @@ sumtubebot/
 
 1. Go to [Discord Developer Portal](https://discord.com/developers/applications)
 2. Create a new application
-3. Navigate to "Bot" section and create a bot
-4. Copy the bot token to your `.env` file
-5. Enable necessary intents:
+3. Copy the Application ID (found in General Information) for VITE_DISCORD_APPLICATION_ID
+4. Navigate to "Bot" section and create a bot
+5. Copy the bot token to your `.env` file
+6. Enable necessary intents:
    - Message Content Intent
    - Server Members Intent (optional)
 

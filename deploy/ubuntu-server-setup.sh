@@ -194,7 +194,7 @@ DISCORD_BOT_TOKEN=your_discord_bot_token_here
 # Google Gemini AI Configuration  
 GEMINI_API_KEY=your_gemini_api_key_here
 
-# Discord Application ID (for invite links)
+# Discord Application ID (for invite links and slash commands)
 VITE_DISCORD_APPLICATION_ID=your_discord_application_id_here
 
 # Server Configuration
@@ -210,7 +210,7 @@ echo ""
 echo "Required values:"
 echo "1. DISCORD_BOT_TOKEN - Get from https://discord.com/developers/applications"
 echo "2. GEMINI_API_KEY - Get from https://aistudio.google.com/app/apikey"
-echo "3. VITE_DISCORD_APPLICATION_ID - Your Discord Application ID"
+echo "3. VITE_DISCORD_APPLICATION_ID - Your Discord Application ID (for frontend invite links and slash commands)"
 echo ""
 echo "After updating .env, run: ./deploy-app.sh"
 EOF

@@ -32,14 +32,13 @@ export default function SetupGuide() {
                 2
               </div>
               <div className="flex-1">
-                <h4 className="text-xl font-semibold text-white mb-3">Configure Channels</h4>
+                <h4 className="text-xl font-semibold text-white mb-3">Available Commands</h4>
                 <p className="text-white/80 mb-4">
-                  SumTube automatically works in all channels where it has permissions. Use slash commands to configure settings.
+                  SumTube automatically works in all channels where it has permissions. Use slash commands for additional information.
                 </p>
                 <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600/30 font-mono text-sm">
-                  <span className="text-blue-400">/sumtube</span> <span className="text-yellow-400">settings</span> <span className="text-white">- Configure bot behavior</span><br />
-                  <span className="text-blue-400">/sumtube</span> <span className="text-yellow-400">toggle</span> <span className="text-white">- Enable/disable in channel</span><br />
-                  <span className="text-blue-400">/sumtube</span> <span className="text-yellow-400">help</span> <span className="text-white">- Show available commands</span>
+                  <span className="text-blue-400">/about</span> <span className="text-white">- Learn about SumTube bot and how to use it</span><br />
+                  <span className="text-gray-400">• More commands coming soon!</span>
                 </div>
               </div>
             </div>
