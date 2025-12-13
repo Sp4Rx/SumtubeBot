@@ -14,8 +14,60 @@ NC='\033[0m' # No Color
 
 # Configuration
 APP_NAME="sumtubebot"
-BRANCH="${1:-main}"
+BRANCH="main"
 CURRENT_DIR="$(pwd)"
+SKIP_BACKUP=false
+SKIP_INSTALL=false
+
+# Help function
+show_help() {
+    echo "SumTube Bot - Production Deployment Script"
+    echo ""
+    echo "Usage: $0 [OPTIONS] [BRANCH]"
+    echo ""
+    echo "Options:"
+    echo "  -h, --help          Show this help message"
+    echo "  --skip-backup       Skip creating backup before deployment"
+    echo "  --skip-install      Skip npm install step"
+    echo ""
+    echo "Arguments:"
+    echo "  BRANCH              Git branch to deploy (default: main)"
+    echo ""
+    echo "Examples:"
+    echo "  $0                          # Deploy from main branch"
+    echo "  $0 develop                  # Deploy from develop branch"
+    echo "  $0 --skip-backup            # Deploy without backup"
+    echo "  $0 --skip-install main      # Deploy without npm install"
+    echo "  $0 --skip-backup --skip-install develop  # Skip both"
+    echo ""
+    exit 0
+}
+
+# Parse command-line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h|--help)
+            show_help
+            ;;
+        --skip-backup)
+            SKIP_BACKUP=true
+            shift
+            ;;
+        --skip-install)
+            SKIP_INSTALL=true
+            shift
+            ;;
+        -*)
+            echo "❌ Unknown option: $1"
+            echo "   Use --help for usage information"
+            exit 1
+            ;;
+        *)
+            BRANCH="$1"
+            shift
+            ;;
+    esac
+done
 
 # Logging functions
 log() {
@@ -39,7 +91,14 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# Pre-deployment checks
+# Show deployment options
+echo "🚀 Starting deployment..."
+if [ "$SKIP_BACKUP" = "true" ] || [ "$SKIP_INSTALL" = "true" ]; then
+    echo "📋 Options:"
+    [ "$SKIP_BACKUP" = "true" ] && echo "   ⏭️  Skip backup: enabled"
+    [ "$SKIP_INSTALL" = "true" ] && echo "   ⏭️  Skip npm install: enabled"
+    echo ""
+fi
 echo "🔍 Running pre-deployment checks..."
 echo ""
 
@@ -92,13 +151,18 @@ echo ""
 echo "✅ Pre-deployment checks passed"
 echo ""
 
-# Create backup of current state
-echo "💾 Creating backup of current deployment..."
-BACKUP_DIR="../backups/sumtubebot-$(date +%Y%m%d_%H%M%S)"
-mkdir -p ../backups
-cp -r . "$BACKUP_DIR"
-echo "✅ Backup created: $BACKUP_DIR"
-echo ""
+# Create backup of current state (unless skipped)
+if [ "$SKIP_BACKUP" = "false" ]; then
+    echo "💾 Creating backup of current deployment..."
+    BACKUP_DIR="../backups/sumtubebot-$(date +%Y%m%d_%H%M%S)"
+    mkdir -p ../backups
+    cp -r . "$BACKUP_DIR"
+    echo "✅ Backup created: $BACKUP_DIR"
+    echo ""
+else
+    echo "⏭️  Skipping backup (--skip-backup flag set)"
+    echo ""
+fi
 
 # Pull latest changes
 echo "📥 Pulling latest changes from $BRANCH branch..."
@@ -108,11 +172,16 @@ git pull origin "$BRANCH"
 echo "✅ Latest changes pulled"
 echo ""
 
-# Install dependencies
-echo "📦 Installing dependencies..."
-npm ci
-echo "✅ Dependencies installed"
-echo ""
+# Install dependencies (unless skipped)
+if [ "$SKIP_INSTALL" = "false" ]; then
+    echo "📦 Installing dependencies..."
+    npm ci
+    echo "✅ Dependencies installed"
+    echo ""
+else
+    echo "⏭️  Skipping npm install (--skip-install flag set)"
+    echo ""
+fi
 
 # Build application
 echo "🔨 Building server application..."
@@ -208,6 +277,12 @@ echo "   Application: $APP_NAME"
 echo "   Branch: $BRANCH"
 echo "   Directory: $CURRENT_DIR"
 echo "   Node.js: $(node --version)"
+if [ "$SKIP_BACKUP" = "true" ]; then
+    echo "   Backup: ⏭️  SKIPPED"
+fi
+if [ "$SKIP_INSTALL" = "true" ]; then
+    echo "   npm install: ⏭️  SKIPPED"
+fi
 echo "   PM2 Status:"
 pm2 list
 echo ""
