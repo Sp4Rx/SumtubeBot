@@ -3,6 +3,8 @@ export default {
     {
       name: 'sumtubebot',
       script: './dist/index.js',
+      interpreter: 'node',
+      interpreter_args: '--env-file=.env',
       instances: 1,
       exec_mode: 'fork',
       watch: false,
