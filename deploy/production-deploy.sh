@@ -135,18 +135,50 @@ fi
 echo "✅ Environment configuration verified"
 echo ""
 
+# Verify build output exists
+if [ ! -f "dist/index.js" ]; then
+    echo "❌ Build output not found: dist/index.js"
+    echo "   Please run: npm run build:server"
+    exit 1
+fi
+echo "   Build output: ✅ SET = dist/index.js"
+echo ""
+
 # Delete existing PM2 process to force fresh environment reload
 echo "🛑 Removing existing PM2 process (to force fresh env reload)..."
 pm2 delete "$APP_NAME" 2>/dev/null || true
 
 # Start fresh PM2 process (ensures .env file is reloaded)
 echo "🚀 Starting fresh PM2 process with updated environment..."
+# Ensure we're in the project directory
+cd "$CURRENT_DIR" || {
+    echo "❌ Failed to change to project directory: $CURRENT_DIR"
+    exit 1
+}
+
+# Verify files exist
+if [ ! -f "dist/index.js" ]; then
+    echo "❌ Build output not found: dist/index.js"
+    exit 1
+fi
+
 if [ -f "ecosystem.config.mjs" ]; then
-    pm2 start ecosystem.config.mjs
+    echo "   Using ecosystem.config.mjs"
+    pm2 start ecosystem.config.mjs || {
+        echo "❌ Failed to start PM2 with ecosystem.config.mjs"
+        echo "   Trying fallback method..."
+        pm2 start dist/index.js --name "$APP_NAME" --interpreter node --interpreter-args "--env-file=.env" --cwd "$CURRENT_DIR"
+    }
 elif [ -f "ecosystem.config.js" ]; then
-    pm2 start ecosystem.config.js
+    echo "   Using ecosystem.config.js"
+    pm2 start ecosystem.config.js || {
+        echo "❌ Failed to start PM2 with ecosystem.config.js"
+        echo "   Trying fallback method..."
+        pm2 start dist/index.js --name "$APP_NAME" --interpreter node --interpreter-args "--env-file=.env" --cwd "$CURRENT_DIR"
+    }
 else
-    pm2 start dist/index.js --name "$APP_NAME"
+    echo "   Using direct script start"
+    pm2 start dist/index.js --name "$APP_NAME" --interpreter node --interpreter-args "--env-file=.env" --cwd "$CURRENT_DIR"
 fi
 echo "✅ PM2 process started"
 echo ""
