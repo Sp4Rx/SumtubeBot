@@ -1,0 +1,78 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  deploy:
+    name: Deploy to Server
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known hosts
+        run: |
+          ssh-keyscan -H -p ${{ secrets.SSH_PORT || 22 }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to server
+        run: |
+          ssh -p ${{ secrets.SSH_PORT || 22 }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'ENDSSH'
+            set -e
+            
+            # Configuration
+            APP_DIR="${{ secrets.APP_DIRECTORY || '/home/ubuntu/SumtubeBot' }}"
+            # Get branch from GitHub Actions context (works for both push and workflow_dispatch)
+            BRANCH="${{ github.ref_name }}"
+            
+            echo "🚀 Starting GitHub Actions deployment..."
+            echo "📂 Target directory: $APP_DIR"
+            echo "🌿 Branch: $BRANCH"
+            echo ""
+            
+            # Navigate to app directory
+            cd "$APP_DIR" || {
+              echo "❌ Directory $APP_DIR not found!"
+              exit 1
+            }
+            
+            # Pull latest code (to get the latest deployment script and code)
+            echo "📥 Pulling latest code from $BRANCH branch..."
+            git fetch origin
+            git checkout "$BRANCH"
+            git pull origin "$BRANCH" || {
+              echo "⚠️  Git pull failed, continuing with existing code..."
+            }
+            echo ""
+            
+            # Check if deployment script exists
+            if [ ! -f "deploy/production-deploy.sh" ]; then
+              echo "❌ Deployment script not found: deploy/production-deploy.sh"
+              echo "   Make sure the repository is cloned correctly"
+              exit 1
+            fi
+            
+            # Make script executable
+            chmod +x deploy/production-deploy.sh
+            
+            # Run deployment script
+            # Skip pull because we already pulled above
+            # Skip backup for faster CI/CD
+            echo "📋 Running deployment script..."
+            ./deploy/production-deploy.sh --skip-backup --skip-pull "$BRANCH"
+          ENDSSH
+
+      - name: Deployment Status
+        run: |
+          echo "✅ Deployment workflow completed"
+          echo "Check your server logs with: pm2 logs sumtubebot"
+

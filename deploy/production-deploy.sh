@@ -18,6 +18,7 @@ BRANCH="main"
 CURRENT_DIR="$(pwd)"
 SKIP_BACKUP=false
 SKIP_INSTALL=false
+SKIP_PULL=false
 
 # Help function
 show_help() {
@@ -29,6 +30,7 @@ show_help() {
     echo "  -h, --help          Show this help message"
     echo "  --skip-backup       Skip creating backup before deployment"
     echo "  --skip-install      Skip npm install step"
+    echo "  --skip-pull         Skip git pull (useful for CI/CD when code is already deployed)"
     echo ""
     echo "Arguments:"
     echo "  BRANCH              Git branch to deploy (default: main)"
@@ -38,7 +40,7 @@ show_help() {
     echo "  $0 develop                  # Deploy from develop branch"
     echo "  $0 --skip-backup            # Deploy without backup"
     echo "  $0 --skip-install main      # Deploy without npm install"
-    echo "  $0 --skip-backup --skip-install develop  # Skip both"
+    echo "  $0 --skip-backup --skip-install --skip-pull  # Skip all (CI/CD mode)"
     echo ""
     exit 0
 }
@@ -55,6 +57,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --skip-install)
             SKIP_INSTALL=true
+            shift
+            ;;
+        --skip-pull)
+            SKIP_PULL=true
             shift
             ;;
         -*)
@@ -93,10 +99,11 @@ command_exists() {
 
 # Show deployment options
 echo "🚀 Starting deployment..."
-if [ "$SKIP_BACKUP" = "true" ] || [ "$SKIP_INSTALL" = "true" ]; then
+if [ "$SKIP_BACKUP" = "true" ] || [ "$SKIP_INSTALL" = "true" ] || [ "$SKIP_PULL" = "true" ]; then
     echo "📋 Options:"
     [ "$SKIP_BACKUP" = "true" ] && echo "   ⏭️  Skip backup: enabled"
     [ "$SKIP_INSTALL" = "true" ] && echo "   ⏭️  Skip npm install: enabled"
+    [ "$SKIP_PULL" = "true" ] && echo "   ⏭️  Skip git pull: enabled"
     echo ""
 fi
 echo "🔍 Running pre-deployment checks..."
@@ -164,13 +171,19 @@ else
     echo ""
 fi
 
-# Pull latest changes
-echo "📥 Pulling latest changes from $BRANCH branch..."
-git fetch origin
-git checkout "$BRANCH"
-git pull origin "$BRANCH"
-echo "✅ Latest changes pulled"
-echo ""
+# Pull latest changes (unless skipped)
+if [ "$SKIP_PULL" = "false" ]; then
+    echo "📥 Pulling latest changes from $BRANCH branch..."
+    git fetch origin
+    git checkout "$BRANCH"
+    git pull origin "$BRANCH"
+    echo "✅ Latest changes pulled"
+    echo ""
+else
+    echo "⏭️  Skipping git pull (--skip-pull flag set)"
+    echo "   Using current code in directory"
+    echo ""
+fi
 
 # Install dependencies (unless skipped)
 if [ "$SKIP_INSTALL" = "false" ]; then
@@ -282,6 +295,9 @@ if [ "$SKIP_BACKUP" = "true" ]; then
 fi
 if [ "$SKIP_INSTALL" = "true" ]; then
     echo "   npm install: ⏭️  SKIPPED"
+fi
+if [ "$SKIP_PULL" = "true" ]; then
+    echo "   git pull: ⏭️  SKIPPED"
 fi
 echo "   PM2 Status:"
 pm2 list
