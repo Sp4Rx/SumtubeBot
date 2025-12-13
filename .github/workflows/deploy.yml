@@ -15,6 +15,44 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup environment variables
+        run: |
+          # Use secrets first, fallback to environment variables
+          # Secrets take precedence over environment variables
+          SSH_HOST="${{ secrets.SSH_HOST || env.SSH_HOST }}"
+          SSH_USER="${{ secrets.SSH_USER || env.SSH_USER }}"
+          SSH_PORT="${{ secrets.SSH_PORT || env.SSH_PORT || 22 }}"
+          APP_DIR="${{ secrets.APP_DIRECTORY || env.APP_DIRECTORY || '/home/ubuntu/SumtubeBot' }}"
+          
+          # Validate required values
+          if [ -z "$SSH_HOST" ]; then
+            echo "❌ Error: SSH_HOST is not set!"
+            echo "   Please add SSH_HOST to repository secrets or environment variables"
+            exit 1
+          fi
+          if [ -z "$SSH_USER" ]; then
+            echo "❌ Error: SSH_USER is not set!"
+            echo "   Please add SSH_USER to repository secrets or environment variables"
+            exit 1
+          fi
+          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
+            echo "❌ Error: SSH_PRIVATE_KEY secret is not set!"
+            echo "   SSH_PRIVATE_KEY must be in repository secrets (not environment variables)"
+            exit 1
+          fi
+          
+          # Export for use in subsequent steps
+          echo "SSH_HOST=$SSH_HOST" >> $GITHUB_ENV
+          echo "SSH_USER=$SSH_USER" >> $GITHUB_ENV
+          echo "SSH_PORT=$SSH_PORT" >> $GITHUB_ENV
+          echo "APP_DIR=$APP_DIR" >> $GITHUB_ENV
+          
+          echo "✅ Configuration loaded:"
+          echo "   SSH_HOST: $SSH_HOST"
+          echo "   SSH_USER: $SSH_USER"
+          echo "   SSH_PORT: $SSH_PORT"
+          echo "   APP_DIR: $APP_DIR"
+
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
@@ -22,34 +60,36 @@ jobs:
 
       - name: Add server to known hosts
         run: |
-          ssh-keyscan -H -p ${{ secrets.SSH_PORT || 22 }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          echo "🔑 Adding $SSH_HOST:$SSH_PORT to known hosts..."
+          ssh-keyscan -H -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
+          echo "✅ Server added to known hosts"
 
       - name: Deploy to server
         run: |
-          ssh -p ${{ secrets.SSH_PORT || 22 }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'ENDSSH'
+          ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" << EOF
             set -e
             
             # Configuration
-            APP_DIR="${{ secrets.APP_DIRECTORY || '/home/ubuntu/SumtubeBot' }}"
+            APP_DIR="${{ env.APP_DIR }}"
             # Get branch from GitHub Actions context (works for both push and workflow_dispatch)
             BRANCH="${{ github.ref_name }}"
             
             echo "🚀 Starting GitHub Actions deployment..."
-            echo "📂 Target directory: $APP_DIR"
-            echo "🌿 Branch: $BRANCH"
+            echo "📂 Target directory: \$APP_DIR"
+            echo "🌿 Branch: \$BRANCH"
             echo ""
             
             # Navigate to app directory
-            cd "$APP_DIR" || {
-              echo "❌ Directory $APP_DIR not found!"
+            cd "\$APP_DIR" || {
+              echo "❌ Directory \$APP_DIR not found!"
               exit 1
             }
             
             # Pull latest code (to get the latest deployment script and code)
-            echo "📥 Pulling latest code from $BRANCH branch..."
+            echo "📥 Pulling latest code from \$BRANCH branch..."
             git fetch origin
-            git checkout "$BRANCH"
-            git pull origin "$BRANCH" || {
+            git checkout "\$BRANCH"
+            git pull origin "\$BRANCH" || {
               echo "⚠️  Git pull failed, continuing with existing code..."
             }
             echo ""
@@ -68,8 +108,8 @@ jobs:
             # Skip pull because we already pulled above
             # Skip backup for faster CI/CD
             echo "📋 Running deployment script..."
-            ./deploy/production-deploy.sh --skip-backup --skip-pull "$BRANCH"
-          ENDSSH
+            ./deploy/production-deploy.sh --skip-backup --skip-pull "\$BRANCH"
+          EOF
 
       - name: Deployment Status
         run: |
