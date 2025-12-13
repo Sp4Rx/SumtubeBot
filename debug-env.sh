@@ -14,8 +14,42 @@ if [ -f ".env" ]; then
     echo "📄 .env file size: $(wc -c <.env) bytes"
     echo "📄 .env file lines: $(wc -l <.env) lines"
     echo ""
-    echo "🔐 .env file contents (masking sensitive data):"
-    sed 's/=.*/=***HIDDEN***/g' .env
+    
+    # Load .env file
+    set -a
+    source .env 2>/dev/null || true
+    set +a
+    
+    # Function to display variable
+    show_var() {
+        local var_name=$1
+        local is_sensitive=$2
+        local value="${!var_name}"
+        
+        if [ -z "$value" ]; then
+            echo "   $var_name: ❌ NOT SET or EMPTY"
+        else
+            if [ "$is_sensitive" = "true" ]; then
+                local length=${#value}
+                if [ $length -gt 8 ]; then
+                    local preview="${value:0:4}...${value: -4}"
+                    echo "   $var_name: ✅ SET (length: $length, preview: $preview)"
+                else
+                    echo "   $var_name: ✅ SET (length: $length) ⚠️  Too short!"
+                fi
+            else
+                echo "   $var_name: ✅ SET = $value"
+            fi
+        fi
+    }
+    
+    echo "📋 Environment Variables from .env file:"
+    show_var "NODE_ENV" false
+    show_var "PORT" false
+    show_var "DISCORD_BOT_TOKEN" true
+    show_var "GEMINI_API_KEY" true
+    show_var "VITE_DISCORD_APPLICATION_ID" false
+    
 else
     echo "❌ .env file NOT found"
     echo "📁 Files in current directory:"
@@ -29,15 +63,8 @@ else
     else
         echo "❌ env.template not found either"
     fi
+    exit 1
 fi
-
-echo ""
-echo "🔍 Environment variables check:"
-echo "NODE_ENV: ${NODE_ENV:-'not set'}"
-echo "PORT: ${PORT:-'not set'}"
-echo "DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:+***SET***}${DISCORD_BOT_TOKEN:-'not set'}"
-echo "GEMINI_API_KEY: ${GEMINI_API_KEY:+***SET***}${GEMINI_API_KEY:-'not set'}"
-echo "VITE_DISCORD_APPLICATION_ID: ${VITE_DISCORD_APPLICATION_ID:-'not set'}"
 
 echo ""
 echo "📦 Node.js version: $(node --version)"
@@ -48,11 +75,39 @@ echo "📊 Current PM2 processes:"
 pm2 list
 
 echo ""
-echo "🔗 Recent PM2 logs (last 10 lines):"
-pm2 logs sumtubebot --lines 10 --nostream
+echo "🔍 PM2 Environment (what the running app sees):"
+if pm2 list | grep -q "sumtubebot"; then
+    pm2 show sumtubebot 2>/dev/null | grep -A 20 "env:" || echo "   (Check PM2 logs for actual values)"
+    echo ""
+    echo "🔗 Recent PM2 logs (last 30 lines) - Look for environment validation:"
+    pm2 logs sumtubebot --lines 30 --nostream 2>/dev/null || echo "   (No logs available)"
+else
+    echo "   ⚠️  PM2 process 'sumtubebot' is not running"
+fi
+
+echo ""
+echo "🧪 Testing GEMINI_API_KEY:"
+if [ -n "$GEMINI_API_KEY" ] && [ ${#GEMINI_API_KEY} -gt 20 ]; then
+    echo "   Testing API key validity..."
+    TEST_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}" \
+        -H "Content-Type: application/json" \
+        -d '{"contents":[{"parts":[{"text":"Say hello"}]}]}' 2>&1)
+    HTTP_CODE=$(echo "$TEST_RESPONSE" | tail -n1)
+    if [ "$HTTP_CODE" = "200" ]; then
+        echo "   ✅ API key is VALID and working!"
+    elif [ "$HTTP_CODE" = "401" ] || [ "$HTTP_CODE" = "403" ]; then
+        echo "   ❌ API key is INVALID (HTTP $HTTP_CODE)"
+        echo "   Check your GEMINI_API_KEY in .env file"
+    else
+        echo "   ⚠️  Got HTTP $HTTP_CODE - API key format may be correct but request failed"
+    fi
+else
+    echo "   ⚠️  GEMINI_API_KEY is too short or empty"
+fi
 
 echo ""
 echo "📋 Next steps:"
 echo "1. If .env is missing values, edit it: nano .env"
-echo "2. Restart PM2 after fixing: pm2 restart sumtubebot"
-echo "3. Check logs: pm2 logs sumtubebot"
+echo "2. Restart PM2 after fixing: pm2 restart sumtubebot --update-env"
+echo "3. Check logs: pm2 logs sumtubebot --lines 50"
