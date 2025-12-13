@@ -1,18 +1,10 @@
-import { fileURLToPath } from 'url';
-import { dirname, resolve } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Resolve script path relative to config file location
-const scriptPath = resolve(__dirname, 'dist/index.js');
-
+// PM2 Ecosystem Configuration
+// Using relative paths - PM2 will resolve them relative to where the config file is located
 export default {
   apps: [
     {
       name: 'sumtubebot',
-      script: scriptPath,
-      cwd: __dirname,
+      script: './dist/index.js',
       interpreter: 'node',
       interpreter_args: '--env-file=.env',
       instances: 1,
@@ -24,9 +16,9 @@ export default {
         NODE_ENV: 'production',
         PORT: 3000
       },
-      error_file: resolve(__dirname, 'logs/err.log'),
-      out_file: resolve(__dirname, 'logs/out.log'),
-      log_file: resolve(__dirname, 'logs/combined.log'),
+      error_file: './logs/err.log',
+      out_file: './logs/out.log',
+      log_file: './logs/combined.log',
       time: true,
       restart_delay: 5000,
       max_restarts: 5,
