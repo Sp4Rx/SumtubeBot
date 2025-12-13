@@ -44,6 +44,15 @@ EMAIL="heysuvajit@gmail.com"
 HTTP_ONLY="${3:-}"
 APP_PORT="${4:-3000}"
 
+# Strip username prefix if present (e.g., "ec2-user@domain.com" -> "domain.com")
+if [[ "$SERVER_DNS" =~ @ ]]; then
+    ORIGINAL_DNS="$SERVER_DNS"
+    SERVER_DNS="${SERVER_DNS#*@}"
+    warning "Removed username prefix from domain"
+    info "   Original: $ORIGINAL_DNS"
+    info "   Using: $SERVER_DNS"
+fi
+
 log "🌐 Setting up Nginx for SumTube Bot Stats API with HTTPS..."
 info "Server DNS: $SERVER_DNS"
 info "Email: $EMAIL"
