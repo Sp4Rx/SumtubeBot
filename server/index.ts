@@ -60,16 +60,24 @@ function validateEnvironmentVariables(): void {
     ? `${apiKey.substring(0, 4)}...${apiKey.substring(apiKey.length - 4)}`
     : '***';
   
-  // Also log first 10 and last 10 chars for verification (helps identify if wrong key is loaded)
-  const verificationPreview = apiKey.length > 20
-    ? `first10: ${apiKey.substring(0, 10)}, last10: ${apiKey.substring(apiKey.length - 10)}`
-    : 'too short';
+  // Mask Discord bot token (shows first 6 and last 6 characters)
+  const discordToken = process.env.DISCORD_BOT_TOKEN!;
+  const maskedDiscordToken = discordToken.length > 12
+    ? `${discordToken.substring(0, 6)}...${discordToken.substring(discordToken.length - 6)}`
+    : '***';
+  
+  // Mask Discord application ID (shows first 4 and last 4 digits)
+  const appId = process.env.VITE_DISCORD_APPLICATION_ID!;
+  const maskedAppId = appId.length > 8
+    ? `${appId.substring(0, 4)}...${appId.substring(appId.length - 4)}`
+    : '***';
   
   console.log('✅ Environment variables validated successfully');
-  console.log(`   DISCORD_BOT_TOKEN: ✅ SET`);
+  console.log(`   NODE_ENV: ✅ SET = ${process.env.NODE_ENV || 'not set'}`);
+  console.log(`   PORT: ✅ SET = ${process.env.PORT || '3000'}`);
+  console.log(`   DISCORD_BOT_TOKEN: ✅ SET (length: ${discordToken.length}, preview: ${maskedDiscordToken})`);
   console.log(`   GEMINI_API_KEY: ✅ SET (length: ${apiKey.length}, preview: ${maskedGeminiKey})`);
-  console.log(`   GEMINI_API_KEY verification: ${verificationPreview}`);
-  console.log(`   VITE_DISCORD_APPLICATION_ID: ✅ SET`);
+  console.log(`   VITE_DISCORD_APPLICATION_ID: ✅ SET (length: ${appId.length}, preview: ${maskedAppId})`);
   console.log('');
 }
 
