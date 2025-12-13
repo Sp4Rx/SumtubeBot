@@ -15,29 +15,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup environment variables
+      - name: Setup configuration
         run: |
-          # Use secrets first, fallback to environment variables
-          # Secrets take precedence over environment variables
-          SSH_HOST="${{ secrets.SSH_HOST || env.SSH_HOST }}"
-          SSH_USER="${{ secrets.SSH_USER || env.SSH_USER }}"
-          SSH_PORT="${{ secrets.SSH_PORT || env.SSH_PORT || 22 }}"
-          APP_DIR="${{ secrets.APP_DIRECTORY || env.APP_DIRECTORY || '/home/ubuntu/SumtubeBot' }}"
+          # Use secrets first, fallback to repository variables
+          # Secrets take precedence over repository variables
+          # GitHub Actions: secrets.* for secrets, vars.* for repository variables
+          SSH_HOST="${{ secrets.SSH_HOST || vars.SSH_HOST }}"
+          SSH_USER="${{ secrets.SSH_USER || vars.SSH_USER }}"
+          SSH_PORT="${{ secrets.SSH_PORT || vars.SSH_PORT || 22 }}"
+          APP_DIR="${{ secrets.APP_DIRECTORY || vars.APP_DIRECTORY || '/home/ubuntu/SumtubeBot' }}"
           
           # Validate required values
           if [ -z "$SSH_HOST" ]; then
             echo "❌ Error: SSH_HOST is not set!"
-            echo "   Please add SSH_HOST to repository secrets or environment variables"
+            echo "   Please add SSH_HOST to repository secrets or repository variables"
             exit 1
           fi
           if [ -z "$SSH_USER" ]; then
             echo "❌ Error: SSH_USER is not set!"
-            echo "   Please add SSH_USER to repository secrets or environment variables"
+            echo "   Please add SSH_USER to repository secrets or repository variables"
             exit 1
           fi
           if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
             echo "❌ Error: SSH_PRIVATE_KEY secret is not set!"
-            echo "   SSH_PRIVATE_KEY must be in repository secrets (not environment variables)"
+            echo "   SSH_PRIVATE_KEY must be in repository secrets"
             exit 1
           fi
           
