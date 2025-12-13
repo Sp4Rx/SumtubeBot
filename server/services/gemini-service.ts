@@ -61,8 +61,60 @@ export async function generateVideoSummary(videoUrl: string, videoId: string): P
     const processingTime = endTime - startTime;
     console.log(`✅ Gemini API response received in ${processingTime}ms`);
 
-    // Extract the summary text
-    const summaryText = response.text;
+    // Extract the summary text from new response format
+    const responseAny = response as any;
+    let summaryText: string | null = null;
+    
+    try {
+      // Validate response structure
+      if (!responseAny.candidates || !Array.isArray(responseAny.candidates) || responseAny.candidates.length === 0) {
+        console.error('❌ Invalid response format: missing or empty candidates array');
+        console.error('📋 Response keys:', Object.keys(responseAny || {}));
+        throw new Error('Invalid response format: Expected candidates array in response');
+      }
+
+      const candidate = responseAny.candidates[0];
+      
+      // Check finish reason for errors
+      if (candidate.finishReason && candidate.finishReason !== 'STOP') {
+        const reason = candidate.finishReason;
+        console.error(`❌ Response finished with reason: ${reason}`);
+        if (reason === 'SAFETY') {
+          throw new Error('Content was blocked by safety filters. The video might contain restricted content.');
+        } else if (reason === 'MAX_TOKENS') {
+          throw new Error('Response was truncated due to token limit.');
+        } else if (reason === 'RECITATION') {
+          throw new Error('Response was blocked due to recitation policy.');
+        } else {
+          throw new Error(`Response finished unexpectedly with reason: ${reason}`);
+        }
+      }
+      
+      // Extract text from content.parts
+      if (!candidate.content?.parts || !Array.isArray(candidate.content.parts) || candidate.content.parts.length === 0) {
+        console.error('❌ Invalid response format: missing or empty content.parts array');
+        console.error('📋 Candidate structure:', JSON.stringify(candidate).substring(0, 500));
+        throw new Error('Invalid response format: Expected content.parts array in candidate');
+      }
+
+      const textPart = candidate.content.parts.find((part: any) => part.text);
+      if (!textPart?.text) {
+        console.error('❌ Invalid response format: no text part found in content.parts');
+        console.error('📋 Parts structure:', JSON.stringify(candidate.content.parts).substring(0, 500));
+        throw new Error('Invalid response format: Could not find text in content.parts');
+      }
+
+      summaryText = textPart.text;
+    } catch (extractError: any) {
+      console.error('❌ Error extracting summary from response:', extractError);
+      console.error('📋 Full response structure:', {
+        hasCandidates: !!responseAny.candidates,
+        candidatesLength: responseAny.candidates?.length || 0,
+        responseKeys: Object.keys(responseAny || {}),
+        responseType: typeof responseAny
+      });
+      throw new Error(`Failed to parse Gemini API response: ${extractError.message}`);
+    }
 
     if (summaryText && summaryText.trim()) {
       console.log(`📄 Summary generated successfully (${summaryText.length} characters)`);
@@ -87,6 +139,7 @@ export async function generateVideoSummary(videoUrl: string, videoId: string): P
       };
     } else {
       console.error('❌ Gemini API returned empty or null summary');
+      console.error('📋 Response structure:', JSON.stringify(response).substring(0, 1000));
       throw new Error('Gemini API did not return a summary');
     }
   } catch (error: any) {
