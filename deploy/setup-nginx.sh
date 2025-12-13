@@ -64,6 +64,19 @@ if [[ $EUID -eq 0 ]]; then
     exit 1
 fi
 
+# Check if domain is AWS EC2 public DNS (Let's Encrypt doesn't issue certs for these)
+if [[ "$SERVER_DNS" =~ ^ec2-.*\.compute\.amazonaws\.com$ ]] || [[ "$SERVER_DNS" =~ ^ec2-.*\.compute\.amazonaws\.com\.$ ]]; then
+    warning "⚠️  AWS EC2 public DNS detected: $SERVER_DNS"
+    warning "   Let's Encrypt does NOT issue certificates for AWS EC2 public DNS names"
+    warning "   Options:"
+    warning "   1. Use a custom domain (recommended for production)"
+    warning "   2. Use HTTP only mode: $0 $SERVER_DNS $EMAIL http_only"
+    if [[ "$HTTP_ONLY" != "http_only" ]]; then
+        error "   Please use 'http_only' flag or provide a custom domain name"
+        exit 1
+    fi
+fi
+
 # Check if domain is a proper FQDN (not IP) for SSL
 if [[ "$SERVER_DNS" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] || [[ "$HTTP_ONLY" == "http_only" ]]; then
     warning "Using HTTP only mode (no SSL)"
