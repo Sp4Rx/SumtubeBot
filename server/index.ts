@@ -28,22 +28,22 @@ function validateEnvironmentVariables(): void {
     
     if (missing.length > 0) {
       console.error('🔴 Missing variables (not set):');
-      missing.forEach(key => console.error(`   - ${key}`));
+      missing.forEach(key => console.error(`   ${key}: ❌ NOT SET`));
       console.error('');
     }
     
     if (empty.length > 0) {
       console.error('🟡 Empty variables (set but empty):');
-      empty.forEach(key => console.error(`   - ${key}`));
+      empty.forEach(key => console.error(`   ${key}: ❌ EMPTY`));
       console.error('');
     }
 
     console.error('📋 Current environment check:');
-    console.error(`   NODE_ENV: ${process.env.NODE_ENV || 'not set'}`);
-    console.error(`   PORT: ${process.env.PORT || 'not set'}`);
-    console.error(`   DISCORD_BOT_TOKEN: ${process.env.DISCORD_BOT_TOKEN ? '***SET***' : 'NOT SET'}`);
-    console.error(`   GEMINI_API_KEY: ${process.env.GEMINI_API_KEY ? `***SET (length: ${process.env.GEMINI_API_KEY.length})***` : 'NOT SET'}`);
-    console.error(`   VITE_DISCORD_APPLICATION_ID: ${process.env.VITE_DISCORD_APPLICATION_ID ? '***SET***' : 'NOT SET'}`);
+    console.error(`   NODE_ENV: ${process.env.NODE_ENV || '❌ NOT SET'}`);
+    console.error(`   PORT: ${process.env.PORT || '❌ NOT SET'}`);
+    console.error(`   DISCORD_BOT_TOKEN: ${process.env.DISCORD_BOT_TOKEN ? '✅ SET' : '❌ NOT SET'}`);
+    console.error(`   GEMINI_API_KEY: ${process.env.GEMINI_API_KEY ? `✅ SET (length: ${process.env.GEMINI_API_KEY.length})` : '❌ NOT SET'}`);
+    console.error(`   VITE_DISCORD_APPLICATION_ID: ${process.env.VITE_DISCORD_APPLICATION_ID ? '✅ SET' : '❌ NOT SET'}`);
     console.error('');
     console.error('💡 Make sure your .env file exists and contains all required variables.');
     console.error('💡 If using PM2, ensure env_file is configured correctly in ecosystem.config.mjs');
@@ -55,14 +55,21 @@ function validateEnvironmentVariables(): void {
   }
 
   // Log successful validation (mask sensitive data)
-  const maskedGeminiKey = process.env.GEMINI_API_KEY!.length > 8 
-    ? `${process.env.GEMINI_API_KEY!.substring(0, 4)}...${process.env.GEMINI_API_KEY!.substring(process.env.GEMINI_API_KEY!.length - 4)}`
+  const apiKey = process.env.GEMINI_API_KEY!;
+  const maskedGeminiKey = apiKey.length > 8 
+    ? `${apiKey.substring(0, 4)}...${apiKey.substring(apiKey.length - 4)}`
     : '***';
   
+  // Also log first 10 and last 10 chars for verification (helps identify if wrong key is loaded)
+  const verificationPreview = apiKey.length > 20
+    ? `first10: ${apiKey.substring(0, 10)}, last10: ${apiKey.substring(apiKey.length - 10)}`
+    : 'too short';
+  
   console.log('✅ Environment variables validated successfully');
-  console.log(`   DISCORD_BOT_TOKEN: ***SET***`);
-  console.log(`   GEMINI_API_KEY: ***SET (length: ${process.env.GEMINI_API_KEY!.length}, preview: ${maskedGeminiKey})***`);
-  console.log(`   VITE_DISCORD_APPLICATION_ID: ***SET***`);
+  console.log(`   DISCORD_BOT_TOKEN: ✅ SET`);
+  console.log(`   GEMINI_API_KEY: ✅ SET (length: ${apiKey.length}, preview: ${maskedGeminiKey})`);
+  console.log(`   GEMINI_API_KEY verification: ${verificationPreview}`);
+  console.log(`   VITE_DISCORD_APPLICATION_ID: ✅ SET`);
   console.log('');
 }
 
@@ -117,6 +124,7 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 
 (async () => {
   // Validate environment variables before starting anything
+  console.log('🔍 Validating environment variables...');
   try {
     validateEnvironmentVariables();
   } catch (error: any) {
